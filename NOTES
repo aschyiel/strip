@@ -1,0 +1,30 @@
+class hierarchy:
+
+Strip
+    Sequence
+        Scene
+            Shot:
+                -image or images for animation.
+            Dialogue;
+                Text
+                    -color
+                    -style
+                    -body of text (string).
+      
+outside world is responsible for passing keyboard events to the "Strip".
+The Strip class is an html canvas wrapper....  
+
+Strip:
+    loadSequence()
+    loadSequenceFromFile()
+
+    events:
+        END
+        SEQUENCE_LOADED
+
+    actions/navigation:
+        NEXT
+        PREVIOUS
+        TO_END_OF_SCENE
+        TO_PREVIOUS_SCENE
+
