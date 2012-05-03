@@ -1,0 +1,7 @@
+*.var
+*.swp
+*~
+target/**
+trash/**
+*.iml
+.idea
