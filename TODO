@@ -1,0 +1,13 @@
+tests
+    test loading a sequence by hand.
+    test loading a sequence from a file.
+    test drawing a scene.
+    test drawing a scene with narrative/text.
+    text navigation within a sequence.
+demo
+    demo a 4 panel xkcd comic.
+    have yarn integrate with strip.
+
+
+run jsHint
+figure out minify 
