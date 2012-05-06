@@ -25,10 +25,14 @@ var Strip = function() {
     debug("Strip local init..");
     return new Strip.fn.init();
   },
-  Sequence = function() { return new Sequence.fn.init() }, 
-  Shot =     function() { return new Shot    .fn.init() },
-  Scene =    function() { return new Scene   .fn.init() },
-  Dialogue = function() { return new Dialogue.fn.init() };
+//Sequence = function() { return new Sequence.fn.init() }, 
+//Shot =     function() { return new Shot    .fn.init() },
+//Scene =    function() { return new Scene   .fn.init() },
+//Dialogue = function() { return new Dialogue.fn.init() };
+  Sequence = function() {},
+  Shot = function() {},
+  Scene = function() {},
+  Dialogue = function() {};
 
 /*
 *   public methods
@@ -102,7 +106,17 @@ Strip.fn = Strip.prototype = {
     newShot: function() {
       debug("Strip.newShot");
       return new Shot.fn.init();
-    }
+    },
+
+    newScene: function() {
+      debug("Strip.newScene()");
+      return new Scene.fn.init();
+    },
+
+    newDialogue: function() {
+      debug("Strip.newDialogue()");
+      return new Dialogue.fn.init();
+    } 
   };
 
 //---------------------------------------------------------------------------
@@ -136,8 +150,11 @@ Sequence.fn = Sequence.prototype = {
 
   // load/setup a scene.
   loadScene: function( scene ) { 
-    var i = 0, len = scenes.length;
-    selected_scene_index = -1;
+    var i = 0, 
+      len = this.scenes.length, 
+      scenes = this.scenes,
+      selected_scene_index = -1;
+
     for ( ;i < len; i++ ) {
       if ( scene === scenes[i] ) {  // TODO does this work?  
         selected_scene_index = i; 
@@ -153,13 +170,14 @@ Sequence.fn = Sequence.prototype = {
 
   // add a scene to the sequence stack.
   pushScene: function( scene ) {
+    var scenes = this.scenes; 
     scenes = scenes || [];
     scenes.push( scene );
     return this;
   },
 
   clearScenes: function() {
-    scenes = [];
+    this.scenes = [];
     return this;
   },
  
@@ -175,11 +193,10 @@ Scene.fn = Scene.prototype = {
     return this;
   },
 
-  setImage: function( image ) {
-    this.shot( new Shot.fn.init() );
-    this.shot.image = image;
+  setShot: function( shot ) {
+    this.shot = shot;
     return this;
-  },
+  }, 
 
   addWords: function( s ) {
     dialogue = dialogue || Strip.newDialogue();
@@ -285,16 +302,20 @@ Dialogue.fn = Dialogue.prototype = {
 }; 
 //--------------------------------------------------------------------------- 
 
-  Strip   .fn.init.prototype = Strip.fn; 
+  //
+  //  setup our namespaced-classes
+  //  note:order matters here...
+  //
+  Shot    .fn.init.prototype = Shot.fn; 
   Sequence.fn.init.prototype = Sequence.fn; 
   Scene   .fn.init.prototype = Scene.fn; 
-  Shot    .fn.init.prototype = Shot.fn; 
   Dialogue.fn.init.prototype = Dialogue.fn; 
+  Strip   .fn.init.prototype = Strip.fn; 
 
-  Strip.fn.newSequence = Sequence.fn.init;
-  Strip.fn.newScene =    Scene.fn.init;
-  Strip.fn.newShot =     Shot.fn.init;
+//Strip.fn.newSequence = Sequence.fn.init;
 //Strip.fn.newScene =    Scene.fn.init;
+//Strip.fn.newShot =     Shot.fn.init;
+//Strip.fn.newDialogue = Dialogue.fn.init;
 
   return Strip; 
 })(); 

@@ -35,10 +35,10 @@ var setup_strip = function() {
   image.src = "media/test_image.jpg"; 
   shot = strip.newShot();
   shot.setImage( image );
-  scene = strip.newScene().addShot( shot ); 
+  scene = strip.newScene().setShot( shot ); 
   debug("scene:"+scene);
 
-  sequence.addScene( scene );
+  sequence.pushScene( scene );
   debug("sequence:"+sequence);
 
 //strip.setCanvas( canvas )
