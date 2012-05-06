@@ -6,102 +6,125 @@
 * most of the Strip methods are intended to work with the "cascading-jsp-style".
 *
 */
-(function( window, undefined ){
+(function( window, undefined ){ 
+
+var debug = function( msg ) {
+  try {
+    console.log( "DEBUG::"+msg );
+  }
+  catch ( e ) {
+    //..
+  } 
+};
 
 var Strip = (function() {
+  debug("Strip..");
 
 // "Local" copy of Strip.
 var Strip = function() {
-    return new Strip.fn.init();
-  },
-  newSequence = new Strip.Sequence(),
-  newScene = new Strip.Scene();
-
-return Strip;
-
-})();
+      debug("Strip local init..");
+      return new Strip.fn.init();
+  }; 
 
 /*
 *   public methods
 */
 Strip.fn = Strip.prototype = {
 
-  constructor: Strip,
+    constructor: Strip,
 
-  init: function() { 
-    return this;
-  },
+    init: function() { 
+      return this;
+    },
 
-  // (Strip.Sequence) the particular sequence we are representing now.
-  sequence,
+    // (Strip.Sequence) the particular sequence we are representing now.
+    sequence: null,
 
-  //
-  //  load a sequence/chapter onto our stage.
-  //
-  loadSequence = function( sequence ) {
-    this.sequence = sequence;
-    return this;
-  },
+    //
+    //  load a sequence/chapter onto our stage.
+    //
+    loadSequence: function( sequence ) {
+      this.sequence = sequence;
+      return this;
+    },
 
-  // the html5 canvas we will draw on.
-  canvas,
+    // the html5 canvas we will draw on.
+    canvas: null,
 
-  // public setter for our Strip's canvas.
-  setCanvas = function( canvas ) {
-    this.canvas = canvas;
-    return this;
-  },
+    // public setter for our Strip's canvas.
+    setCanvas: function( canvas ) {
+      this.canvas = canvas;
+      return this;
+    },
 
-  // synonymous with "start".
-  action = function() {
-    this.sequence.action();
-    return this;
-  },
+    // synonymous with "start".
+    action: function() {
+      debug("action");
+      if ( !this.sequence ) {
+        debug( "sequence is null!" );
+      }
+      this.sequence.action();
+      return this;
+    },
 
-  // synonimous with "stop".
-  cut = function() {
-    this.sequence.cut();
-    return this;
-  },
+    // synonimous with "stop".
+    cut: function() {
+      this.sequence.cut();
+      return this;
+    },
 
-  // go to the next scene.
-  next = function() { 
-    var scene = sequence.scenes[ sequence.selected_scene_index + 1 ];
-    scene = scene || sequence.scenes[0];
-    scene && this.sequence.loadScene( scene ).setCanvas( canvas ).action();
-    return this;
-  },
+    // go to the next scene.
+    next: function() { 
+      var scene = sequence.scenes[ sequence.selected_scene_index + 1 ];
+      scene = scene || sequence.scenes[0];
+      scene && this.sequence.loadScene( scene ).setCanvas( canvas ).action();
+      return this;
+    },
 
-  // go to the previous scene.
-  prev = previous = function() { 
-    var scene = sequence.scenes[ sequence.selected_scene_index - 1 ];
-    scene = scene || sequence.scenes[0];
-    scene && this.sequence.loadScene( scene ).setCanvas( canvas ).action();
-    return this; 
-  }
+    // go to the previous scene.
+    previous: function() { 
+      var scene = sequence.scenes[ sequence.selected_scene_index - 1 ];
+      scene = scene || sequence.scenes[0];
+      scene && this.sequence.loadScene( scene ).setCanvas( canvas ).action();
+      return this; 
+    }
 
-};
+  };
 
+  Strip.fn.init.prototype = Strip.fn; 
+
+  return Strip; 
+})(); 
 //---------------------------------------------------------------------------
 /*
 *   the Sequence "class".
 *   represents an ordered collection of scenes to be drawn by the strip.
 */
-Strip.Sequence.prototype = {
+var Sequence = function(){};
+Sequence.prototype = {
 
   constructor: Strip.Sequence,
 
+  init: function() { 
+    return this;
+  },
+
   selected_scene_index: 0, 
 
-  canvas,
+  canvas: null,
 
   // the drawing context.
-  ctx,  
+  ctx: null,  
 
   current_scene_index: -1, 
 
   scenes: [],
- 
+
+  action: function() {
+    debug("sequence, action");
+    return this;
+  },
+
   // load/setup a scene.
   loadScene: function( scene ) { 
     var i = 0, len = scenes.length;
@@ -128,18 +151,23 @@ Strip.Sequence.prototype = {
 
   clearScenes: function() {
     scenes = [];
-    return this,
+    return this;
   },
  
   setCanvas: function( canvas ) {
     this.canvas = canvas;
     return this;
-  }; 
+  } 
 };
 //---------------------------------------------------------------------------
-Strip.Scene.prototype = { 
+var Scene = function(){};
+Scene.prototype = { 
 
   constructor: Strip.Scene,
+
+  init: function() { 
+    return this;
+  },
 
   setImage: function( image ) {
     this.shot( Strip.newShot( image ) );
@@ -155,39 +183,38 @@ Strip.Scene.prototype = {
   setup: function() {
     //..
     return this;
-  }
+  },
 
   /* the shot used in this scene. */
-  shot,
-  dialogue;
+  shot: null,
+  dialogue: null
 };
 //---------------------------------------------------------------------------
-//Strip.Shot = function(){ return this };
-Strip.Shot.prototype = {
+var Shot = function(){};
+Shot.prototype = {
 
   constructor: Strip.Shot,
 
   draw: function( context ) {
     if ( !this.image ) {
-      Strip.debug( "show with missing image" ); // TODO:blank out?
+      debug( "show with missing image" ); // TODO:blank out?
     } 
     context.drawImage( this.image, 0, 0 );
     return this;
   },
 
-  image;
+  image: null
 };
 //---------------------------------------------------------------------------
-Strip.Dialogue.prototype = {
+var Dialogue = function(){};
+Dialogue.prototype = {
 
   constructor: Strip.Dialogue,
 
-  texts = [],
+  texts: [],
 
   /* the currently selected text index. */
-  selected_index = 0,
-
-  is
+  selected_index: 0, 
 
   /* draw the dialogue's words/text onto the stage. */
   draw: function( context, width, height ) {
@@ -243,17 +270,12 @@ Strip.Dialogue.prototype = {
     context.fillStyle = get_fill_style();
     context.fillText( words, get_x(), get_y() );
     return this;
-  };
+  }
 };
 
-//---------------------------------------------------------------------------
-Strip.debug = function( msg ) {
-  try {
-    console.log( "DEBUG::"+msg );
-  }
-  catch ( e ) {
-    //..
-  }
+//--------------------------------------------------------------------------- 
 
-};
-
+Strip.newSequence = Sequence.prototype.init(),
+Strip.newScene = Scene.prototype.init(); 
+window.Strip = Strip; 
+})(window);

@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>test#1, single shot (no text/dialogue).</title>
+<script src="../lib/jquery.js"></script>
+<script src="../src/Strip.js"></script>
+<script type="text/javascript"> 
+
+$(document).ready(function(){ handle_document_ready(); });
+
+var handle_document_ready = function() {
+  debug( "..handle_document_ready.." ); 
+
+//var strip = setup_strip();
+  var strip = new Strip();
+  strip.action();
+}
+
+var debug = function( msg ) {
+  console.log(msg);
+}
+
+/*
+* setup a strip with a single scene within a single sequence.
+*/
+var setup_strip = function() { 
+  debug( "..setup_strip.." ); 
+  var strip = Strip.newStrip(),
+    sequence = Strip.newSequence(),
+    scene,
+    image = new Image(),
+    canvas = $('#stage');
+ 
+  image.src = "media/test_image.jpg"; 
+  scene = Strip.newScene()
+    .addShot( Strip.newShot().addImage( image ) ); 
+
+  strip.setCanvas( canvas )
+    .loadSequence( sequence.addScene( scene ) ); 
+  
+  return strip;
+} 
+
+</script>
+</head>
+<body>
+  <div style="position: absolute; top: 50px; left:50px">
+    <canvas id="stage" width="500" height="300">html5 canvas isn't!</canvas>
+  </div>
+</body>
+</html>
