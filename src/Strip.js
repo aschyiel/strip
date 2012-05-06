@@ -13,7 +13,9 @@ var Strip = (function() {
 // "Local" copy of Strip.
 var Strip = function() {
     return new Strip.fn.init();
-  }; 
+  },
+  newSequence = new Strip.Sequence(),
+  newScene = new Strip.Scene();
 
 return Strip;
 
@@ -130,13 +132,128 @@ Strip.Sequence.prototype = {
   },
  
   setCanvas: function( canvas ) {
-    canvas = canvas;
+    this.canvas = canvas;
     return this;
-  } 
+  }; 
 };
 //---------------------------------------------------------------------------
-Strip.Scene.prototype = {
+Strip.Scene.prototype = { 
+
+  constructor: Strip.Scene,
+
+  setImage: function( image ) {
+    this.shot( Strip.newShot( image ) );
+    return this;
+  },
+
+  addWords: function( s ) {
+    dialogue = dialogue || Strip.newDialogue();
+    dialogue.addText( Strip.newText( s ) );
+    return this;
+  },
+
+  setup: function() {
+    //..
+    return this;
+  }
+
+  /* the shot used in this scene. */
+  shot,
+  dialogue;
+};
+//---------------------------------------------------------------------------
+//Strip.Shot = function(){ return this };
+Strip.Shot.prototype = {
+
+  constructor: Strip.Shot,
+
+  draw: function( context ) {
+    if ( !this.image ) {
+      Strip.debug( "show with missing image" ); // TODO:blank out?
+    } 
+    context.drawImage( this.image, 0, 0 );
+    return this;
+  },
+
+  image;
+};
+//---------------------------------------------------------------------------
+Strip.Dialogue.prototype = {
+
+  constructor: Strip.Dialogue,
+
+  texts = [],
+
+  /* the currently selected text index. */
+  selected_index = 0,
+
+  is
+
+  /* draw the dialogue's words/text onto the stage. */
+  draw: function( context, width, height ) {
+    var text = texts[this.selected_index], 
+      words,
+      prev_x = ~~(width*0.5), 
+      prev_y = 16,
+      i = 0,
+      get_fill_style,
+      get_x, 
+      get_y;
+  
+    words = text.words;
+
+    // TODO:allow different word-bubble strategies...
+    get_x = function() {
+      return prev_x += 16;  // TODO:alternative left and right.
+    }
+
+    get_y = function() {
+      return prev_y += 32; 
+    }
+
+    get_fill_style = function() {
+      switch ( i ) {
+        case 0:
+          colour = 'black';
+          break;
+        case 1:
+          colour = 'red';
+          break; 
+        case 2:
+          colour = 'green';
+          break; 
+        case 3:
+          colour = 'blue';
+          break; 
+        default:
+          colour = 'black';
+          break;
+      }
+
+      i++;
+      if ( i > 3 ) {
+        i = 0;
+      }
+      return colour;
+    }
+
+    // TODO:text color alternation...
+    // TODO:probably need to loop through and 
+    // re-draw all the words from previous texts.
+    context.fillStyle = get_fill_style();
+    context.fillText( words, get_x(), get_y() );
+    return this;
+  };
+};
+
+//---------------------------------------------------------------------------
+Strip.debug = function( msg ) {
+  try {
+    console.log( "DEBUG::"+msg );
+  }
+  catch ( e ) {
+    //..
+  }
 
 };
-//---------------------------------------------------------------------------
 
