@@ -12,8 +12,7 @@ $(document).ready(function(){ handle_document_ready(); });
 var handle_document_ready = function() {
   debug( "..handle_document_ready.." ); 
 
-//var strip = setup_strip();
-  var strip = new Strip();
+  var strip = setup_strip();
   strip.action();
 }
 
@@ -26,19 +25,26 @@ var debug = function( msg ) {
 */
 var setup_strip = function() { 
   debug( "..setup_strip.." ); 
-  var strip = Strip.newStrip(),
-    sequence = Strip.newSequence(),
+  var strip = new Strip(),
+    sequence = strip.newSequence(),
     scene,
+    shot,
     image = new Image(),
     canvas = $('#stage');
  
   image.src = "media/test_image.jpg"; 
-  scene = Strip.newScene()
-    .addShot( Strip.newShot().addImage( image ) ); 
+  shot = strip.newShot();
+  shot.setImage( image );
+  scene = strip.newScene().addShot( shot ); 
+  debug("scene:"+scene);
 
-  strip.setCanvas( canvas )
-    .loadSequence( sequence.addScene( scene ) ); 
-  
+  sequence.addScene( scene );
+  debug("sequence:"+sequence);
+
+//strip.setCanvas( canvas )
+//  .loadSequence( sequence.addScene( scene ) ); 
+  strip.setCanvas( canvas ).loadSequence( sequence ); 
+
   return strip;
 } 
 

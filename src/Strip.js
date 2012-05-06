@@ -22,9 +22,13 @@ var Strip = (function() {
 
 // "Local" copy of Strip.
 var Strip = function() {
-      debug("Strip local init..");
-      return new Strip.fn.init();
-  }; 
+    debug("Strip local init..");
+    return new Strip.fn.init();
+  },
+  Sequence = function() { return new Sequence.fn.init() }, 
+  Shot =     function() { return new Shot    .fn.init() },
+  Scene =    function() { return new Scene   .fn.init() },
+  Dialogue = function() { return new Dialogue.fn.init() };
 
 /*
 *   public methods
@@ -44,6 +48,7 @@ Strip.fn = Strip.prototype = {
     //  load a sequence/chapter onto our stage.
     //
     loadSequence: function( sequence ) {
+      debug( "strip.loadSequence, sequence:"+sequence );
       this.sequence = sequence;
       return this;
     },
@@ -59,7 +64,7 @@ Strip.fn = Strip.prototype = {
 
     // synonymous with "start".
     action: function() {
-      debug("action");
+      debug("strip.action");
       if ( !this.sequence ) {
         debug( "sequence is null!" );
       }
@@ -87,21 +92,25 @@ Strip.fn = Strip.prototype = {
       scene = scene || sequence.scenes[0];
       scene && this.sequence.loadScene( scene ).setCanvas( canvas ).action();
       return this; 
-    }
+    },
 
+    newSequence: function() {
+      debug("Strip.newSequence");
+      return new Sequence.fn.init();
+    },
+
+    newShot: function() {
+      debug("Strip.newShot");
+      return new Shot.fn.init();
+    }
   };
 
-  Strip.fn.init.prototype = Strip.fn; 
-
-  return Strip; 
-})(); 
 //---------------------------------------------------------------------------
 /*
 *   the Sequence "class".
 *   represents an ordered collection of scenes to be drawn by the strip.
 */
-var Sequence = function(){};
-Sequence.prototype = {
+Sequence.fn = Sequence.prototype = {
 
   constructor: Strip.Sequence,
 
@@ -160,23 +169,21 @@ Sequence.prototype = {
   } 
 };
 //---------------------------------------------------------------------------
-var Scene = function(){};
-Scene.prototype = { 
-
-  constructor: Strip.Scene,
-
+Scene.fn = Scene.prototype = { 
+  constructor: Strip.Scene, 
   init: function() { 
     return this;
   },
 
   setImage: function( image ) {
-    this.shot( Strip.newShot( image ) );
+    this.shot( new Shot.fn.init() );
+    this.shot.image = image;
     return this;
   },
 
   addWords: function( s ) {
     dialogue = dialogue || Strip.newDialogue();
-    dialogue.addText( Strip.newText( s ) );
+    dialogue.addText( Strip.newText( s ) ); //TODO:this will fail
     return this;
   },
 
@@ -190,26 +197,30 @@ Scene.prototype = {
   dialogue: null
 };
 //---------------------------------------------------------------------------
-var Shot = function(){};
-Shot.prototype = {
-
+Shot.fn = Shot.prototype = { 
   constructor: Strip.Shot,
-
+  init: function() { 
+    return this;
+  }, 
   draw: function( context ) {
     if ( !this.image ) {
       debug( "show with missing image" ); // TODO:blank out?
     } 
     context.drawImage( this.image, 0, 0 );
     return this;
-  },
-
+  }, 
+  setImage: function( image ) {
+    this.image = image;
+    return this;
+  }, 
   image: null
 };
 //---------------------------------------------------------------------------
-var Dialogue = function(){};
-Dialogue.prototype = {
-
-  constructor: Strip.Dialogue,
+Dialogue.fn = Dialogue.prototype = { 
+  constructor: Strip.Dialogue, 
+  init: function() { 
+    return this;
+  },
 
   texts: [],
 
@@ -271,11 +282,22 @@ Dialogue.prototype = {
     context.fillText( words, get_x(), get_y() );
     return this;
   }
-};
-
+}; 
 //--------------------------------------------------------------------------- 
 
-Strip.newSequence = Sequence.prototype.init(),
-Strip.newScene = Scene.prototype.init(); 
+  Strip   .fn.init.prototype = Strip.fn; 
+  Sequence.fn.init.prototype = Sequence.fn; 
+  Scene   .fn.init.prototype = Scene.fn; 
+  Shot    .fn.init.prototype = Shot.fn; 
+  Dialogue.fn.init.prototype = Dialogue.fn; 
+
+  Strip.fn.newSequence = Sequence.fn.init;
+  Strip.fn.newScene =    Scene.fn.init;
+  Strip.fn.newShot =     Shot.fn.init;
+//Strip.fn.newScene =    Scene.fn.init;
+
+  return Strip; 
+})(); 
+//--------------------------------------------------------------------------- 
 window.Strip = Strip; 
 })(window);
