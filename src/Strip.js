@@ -25,10 +25,6 @@ var Strip = function() {
     debug("Strip local init..");
     return new Strip.fn.init();
   },
-//Sequence = function() { return new Sequence.fn.init() }, 
-//Shot =     function() { return new Shot    .fn.init() },
-//Scene =    function() { return new Scene   .fn.init() },
-//Dialogue = function() { return new Dialogue.fn.init() };
   Sequence = function() {},
   Shot = function() {},
   Scene = function() {},
@@ -60,9 +56,14 @@ Strip.fn = Strip.prototype = {
     // the html5 canvas we will draw on.
     canvas: null,
 
+    ctx: null,
+
     // public setter for our Strip's canvas.
     setCanvas: function( canvas ) {
+      debug("canvas:"+canvas);
       this.canvas = canvas;
+      this.ctx = canvas.getContext('2d');
+      debug("strip.setCanvas, ctx:"+this.ctx);
       return this;
     },
 
@@ -72,7 +73,7 @@ Strip.fn = Strip.prototype = {
       if ( !this.sequence ) {
         debug( "sequence is null!" );
       }
-      this.sequence.action();
+      this.sequence.setContext(this.ctx).action();
       return this;
     },
 
@@ -86,7 +87,7 @@ Strip.fn = Strip.prototype = {
     next: function() { 
       var scene = sequence.scenes[ sequence.selected_scene_index + 1 ];
       scene = scene || sequence.scenes[0];
-      scene && this.sequence.loadScene( scene ).setCanvas( canvas ).action();
+      scene && this.sequence.loadScene( scene ).setContext( this.ctx ).action();
       return this;
     },
 
@@ -94,7 +95,7 @@ Strip.fn = Strip.prototype = {
     previous: function() { 
       var scene = sequence.scenes[ sequence.selected_scene_index - 1 ];
       scene = scene || sequence.scenes[0];
-      scene && this.sequence.loadScene( scene ).setCanvas( canvas ).action();
+      scene && this.sequence.loadScene( scene ).setContext( this.ctx ).action();
       return this; 
     },
 
@@ -145,6 +146,30 @@ Sequence.fn = Sequence.prototype = {
 
   action: function() {
     debug("sequence, action");
+    if ( this.current_scene_index < 0 ) {
+      this.current_scene_index = 0;
+    }
+    this.load_current_scene();
+    return this;
+  },
+
+  //
+  //  load the currently selected scene by index.
+  //
+  load_current_scene: function() {
+    debug("load_current_scene");
+    var scene,
+      idx = this.current_scene_index,
+      ctx = this.ctx;
+
+    debug( "idx:"+idx );
+    scene = this.scenes[ idx ]; 
+
+    debug( "scene:"+scene );
+    debug( "ctx:"+ctx );    
+
+    scene.setup( ctx );
+
     return this;
   },
 
@@ -161,18 +186,15 @@ Sequence.fn = Sequence.prototype = {
       }
     }
 
-    scene.setup();
-    scene.shot.draw( ctx );
-    scene.dialogue.draw( ctx );
+    scene.setup( ctx );
 
     return this;
   },
 
   // add a scene to the sequence stack.
   pushScene: function( scene ) {
-    var scenes = this.scenes; 
-    scenes = scenes || [];
-    scenes.push( scene );
+    this.scenes = this.scenes || [];
+    this.scenes.push( scene );
     return this;
   },
 
@@ -180,9 +202,10 @@ Sequence.fn = Sequence.prototype = {
     this.scenes = [];
     return this;
   },
- 
-  setCanvas: function( canvas ) {
-    this.canvas = canvas;
+
+  setContext: function( ctx ) { 
+    debug( "sequence.setContext, ctx:"+ctx );
+    this.ctx = ctx; 
     return this;
   } 
 };
@@ -204,8 +227,11 @@ Scene.fn = Scene.prototype = {
     return this;
   },
 
-  setup: function() {
-    //..
+  setup: function( ctx ) {
+    debug( "scene.setup" );
+    debug( "scene.setup, ctx:"+ctx );
+    this.shot.draw( ctx );
+//  this.dialogue.draw( ctx );  // TODO
     return this;
   },
 
@@ -223,7 +249,11 @@ Shot.fn = Shot.prototype = {
     if ( !this.image ) {
       debug( "show with missing image" ); // TODO:blank out?
     } 
-    context.drawImage( this.image, 0, 0 );
+//  context.drawImage( this.image, 50, 50 );
+    //
+    //  TODO!!!
+    //
+    context.fillRect
     return this;
   }, 
   setImage: function( image ) {
@@ -312,10 +342,7 @@ Dialogue.fn = Dialogue.prototype = {
   Dialogue.fn.init.prototype = Dialogue.fn; 
   Strip   .fn.init.prototype = Strip.fn; 
 
-//Strip.fn.newSequence = Sequence.fn.init;
-//Strip.fn.newScene =    Scene.fn.init;
 //Strip.fn.newShot =     Shot.fn.init;
-//Strip.fn.newDialogue = Dialogue.fn.init;
 
   return Strip; 
 })(); 

@@ -30,19 +30,20 @@ var setup_strip = function() {
     scene,
     shot,
     image = new Image(),
-    canvas = $('#stage');
+    canvas = $('#stage')[0];
  
   image.src = "media/test_image.jpg"; 
   shot = strip.newShot();
   shot.setImage( image );
   scene = strip.newScene().setShot( shot ); 
   debug("scene:"+scene);
+  window.scene = scene;
 
   sequence.pushScene( scene );
   debug("sequence:"+sequence);
+  window.sequence = sequence;
 
-//strip.setCanvas( canvas )
-//  .loadSequence( sequence.addScene( scene ) ); 
+  debug( "canvas:"+canvas );
   strip.setCanvas( canvas ).loadSequence( sequence ); 
 
   return strip;
