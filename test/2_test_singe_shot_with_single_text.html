@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>test#2, single shot with single text.</title>
+<script src="../lib/jquery.js"></script>
+<script src="../src/Strip.js"></script>
+<script type="text/javascript"> 
+
+$(document).ready(function(){ handle_document_ready(); });
+
+var handle_document_ready = function() {
+  debug( "..handle_document_ready.." ); 
+
+  var image = new Image(); 
+  window.image = image;
+  $(image).load(function(){
+    debug("..image onload..")
+    debug("src:"+image.src);
+    var strip = setup_strip( image );
+    strip.action(); 
+  }); 
+  debug("setting image src.");
+  image.src = "media/test_image.jpg"; 
+} 
+
+var debug = function( msg ) {
+  console.log(msg);
+}
+
+/*
+* setup a strip with a single scene within a single sequence.
+*/
+var setup_strip = function( image ) { 
+  debug( "..setup_strip.." ); 
+  var strip = new Strip(),
+    sequence = strip.newSequence(),
+    scene,
+    shot,
+    dialogue,
+    canvas = $('#stage')[0]; 
+
+  shot = strip.newShot();
+  shot.setImage( image );
+
+  dialogue = strip.newDialogue();
+  dialogue.pushText( strip.newText("This is the text we want to show.") );
+
+  scene = strip.newScene()
+    .setShot( shot )
+    .setDialogue( dialogue ); 
+  debug("scene:"+scene);
+  window.scene = scene;
+
+  sequence.pushScene( scene );
+  debug("sequence:"+sequence);
+  window.sequence = sequence;
+
+  debug( "canvas:"+canvas );
+  strip.setCanvas( canvas ).loadSequence( sequence ); 
+
+  return strip;
+} 
+
+</script>
+</head>
+<body>
+  <div style="position: absolute; top: 50px; left:50px">
+    <canvas id="stage" width="600" height="400">html5 canvas isn't!</canvas>
+  </div>
+</body>
+</html>

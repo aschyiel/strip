@@ -26,8 +26,9 @@ var Strip = function() {
     return new Strip.fn.init();
   },
   Sequence = function() {},
-  Shot = function() {},
-  Scene = function() {},
+  Shot =     function() {},
+  Scene =    function() {},
+  Text =     function() {},
   Dialogue = function() {};
 
 /*
@@ -117,7 +118,13 @@ Strip.fn = Strip.prototype = {
     newDialogue: function() {
       debug("Strip.newDialogue()");
       return new Dialogue.fn.init();
-    } 
+    },
+
+    newText: function(msg) {
+      debug("strip.newText");
+      return ( new Text.fn.init() ).setMessage(msg);
+    }
+
   };
 
 //---------------------------------------------------------------------------
@@ -127,7 +134,7 @@ Strip.fn = Strip.prototype = {
 */
 Sequence.fn = Sequence.prototype = {
 
-  constructor: Strip.Sequence,
+  constructor: Sequence,
 
   init: function() { 
     return this;
@@ -211,7 +218,7 @@ Sequence.fn = Sequence.prototype = {
 };
 //---------------------------------------------------------------------------
 Scene.fn = Scene.prototype = { 
-  constructor: Strip.Scene, 
+  constructor: Scene, 
   init: function() { 
     return this;
   },
@@ -221,17 +228,18 @@ Scene.fn = Scene.prototype = {
     return this;
   }, 
 
-  addWords: function( s ) {
-    dialogue = dialogue || Strip.newDialogue();
-    dialogue.addText( Strip.newText( s ) ); //TODO:this will fail
-    return this;
-  },
+// TODO, this would be a nice wrapper...
+//addWords: function( s ) {
+//  dialogue = dialogue || Strip.newDialogue();
+//  dialogue.addText( Text..newText( s ) ); //TODO:this will fail
+//  return this;
+//},
 
   setup: function( ctx ) {
     debug( "scene.setup" );
     debug( "scene.setup, ctx:"+ctx );
     this.shot.draw( ctx );
-//  this.dialogue.draw( ctx );  // TODO
+    this.dialogue.draw( ctx );  
     return this;
   },
 
@@ -241,7 +249,7 @@ Scene.fn = Scene.prototype = {
 };
 //---------------------------------------------------------------------------
 Shot.fn = Shot.prototype = { 
-  constructor: Strip.Shot,
+  constructor: Shot,
   init: function() { 
     return this;
   }, 
@@ -269,7 +277,7 @@ Shot.fn = Shot.prototype = {
 };
 //---------------------------------------------------------------------------
 Dialogue.fn = Dialogue.prototype = { 
-  constructor: Strip.Dialogue, 
+  constructor: Dialogue, 
   init: function() { 
     return this;
   },
@@ -280,7 +288,11 @@ Dialogue.fn = Dialogue.prototype = {
   selected_index: 0, 
 
   /* draw the dialogue's words/text onto the stage. */
+  //
+  //  TODO:how do we know where to put the text relative to the image?
+  //
   draw: function( context, width, height ) {
+    debug("dialogue.draw");
     var text = texts[this.selected_index], 
       words,
       prev_x = ~~(width*0.5), 
@@ -335,6 +347,21 @@ Dialogue.fn = Dialogue.prototype = {
     return this;
   }
 }; 
+//---------------------------------------------------------------------------
+/*
+* Text represents a message we want to show/deliver to the audience.
+*/
+Text.fn = Text.prototype = { 
+  constructor: Text, 
+  init: function() { 
+    return this;
+  },
+  setMessage: function(s) {
+    this.message = s;
+    return this;
+  }
+
+};
 //--------------------------------------------------------------------------- 
 
   //
@@ -346,8 +373,7 @@ Dialogue.fn = Dialogue.prototype = {
   Scene   .fn.init.prototype = Scene.fn; 
   Dialogue.fn.init.prototype = Dialogue.fn; 
   Strip   .fn.init.prototype = Strip.fn; 
-
-//Strip.fn.newShot =     Shot.fn.init;
+  Text    .fn.init.prototype = Text.fn; 
 
   return Strip; 
 })(); 
