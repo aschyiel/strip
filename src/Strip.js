@@ -247,20 +247,25 @@ Shot.fn = Shot.prototype = {
   }, 
   draw: function( context ) {
     if ( !this.image ) {
-      debug( "show with missing image" ); // TODO:blank out?
+      debug( "image is missing!!!" ); // TODO:blank out?
     } 
-//  context.drawImage( this.image, 50, 50 );
-    //
-    //  TODO!!!
-    //
-    context.fillRect
+    window.image2 = image;
+    window.context2 = context;
+    context.drawImage( this.image, 0, 0 );  // TODO
+//  context.strokeStyle = "#000000";
+//  context.fillStyle = "#FFFF00";
+//  context.beginPath();
+//  context.arc(100,100,50,0,Math.PI*2,true);
+//  context.closePath();
+//  context.stroke();
+//  context.fill();
+
     return this;
   }, 
   setImage: function( image ) {
     this.image = image;
     return this;
-  }, 
-  image: null
+  } 
 };
 //---------------------------------------------------------------------------
 Dialogue.fn = Dialogue.prototype = { 

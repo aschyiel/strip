@@ -12,9 +12,19 @@ $(document).ready(function(){ handle_document_ready(); });
 var handle_document_ready = function() {
   debug( "..handle_document_ready.." ); 
 
-  var strip = setup_strip();
-  strip.action();
+  var image = new Image(); 
+  window.image = image;
+  $(image).load(function(){
+    debug("..image onload..")
+    debug("src:"+image.src);
+    var strip = setup_strip( image );
+    strip.action(); 
+  }); 
+  debug("setting image src.");
+  image.src = "media/test_image.jpg"; 
 }
+
+
 
 var debug = function( msg ) {
   console.log(msg);
@@ -23,16 +33,15 @@ var debug = function( msg ) {
 /*
 * setup a strip with a single scene within a single sequence.
 */
-var setup_strip = function() { 
+var setup_strip = function( image ) { 
   debug( "..setup_strip.." ); 
   var strip = new Strip(),
     sequence = strip.newSequence(),
     scene,
     shot,
-    image = new Image(),
     canvas = $('#stage')[0];
  
-  image.src = "media/test_image.jpg"; 
+
   shot = strip.newShot();
   shot.setImage( image );
   scene = strip.newScene().setShot( shot ); 
@@ -53,7 +62,7 @@ var setup_strip = function() {
 </head>
 <body>
   <div style="position: absolute; top: 50px; left:50px">
-    <canvas id="stage" width="500" height="300">html5 canvas isn't!</canvas>
+    <canvas id="stage" width="600" height="400">html5 canvas isn't!</canvas>
   </div>
 </body>
 </html>
