@@ -217,6 +217,11 @@ Sequence.fn = Sequence.prototype = {
   } 
 };
 //---------------------------------------------------------------------------
+/*
+* A Scene represents a visual, and possibly some text;
+* parent to Shot, and Dialogue.
+* 1+ Scenes make up a Sequence.
+*/
 Scene.fn = Scene.prototype = { 
   constructor: Scene, 
   init: function() { 
@@ -245,7 +250,12 @@ Scene.fn = Scene.prototype = {
 
   /* the shot used in this scene. */
   shot: null,
-  dialogue: null
+  dialogue: null,
+
+  setDialogue: function( dialogue ) {
+    this.dialogue = dialogue;
+    return this;
+  } 
 };
 //---------------------------------------------------------------------------
 Shot.fn = Shot.prototype = { 
@@ -276,6 +286,10 @@ Shot.fn = Shot.prototype = {
   } 
 };
 //---------------------------------------------------------------------------
+/*
+* Dialogue represents an ordered grouping of Texts.
+* ie. 2 people talking can be represented by alternating blue vs red Text.
+*/
 Dialogue.fn = Dialogue.prototype = { 
   constructor: Dialogue, 
   init: function() { 
@@ -293,7 +307,7 @@ Dialogue.fn = Dialogue.prototype = {
   //
   draw: function( context, width, height ) {
     debug("dialogue.draw");
-    var text = texts[this.selected_index], 
+    var text = this.texts[this.selected_index], 
       words,
       prev_x = ~~(width*0.5), 
       prev_y = 16,
@@ -310,13 +324,13 @@ Dialogue.fn = Dialogue.prototype = {
     }
 
     get_y = function() {
-      return prev_y += 32; 
+      return prev_y += 32;  // TODO:needs to be lower on the canvas!
     }
 
     get_fill_style = function() {
       switch ( i ) {
         case 0:
-          colour = 'black';
+          colour = 'aqua';
           break;
         case 1:
           colour = 'red';
@@ -328,7 +342,7 @@ Dialogue.fn = Dialogue.prototype = {
           colour = 'blue';
           break; 
         default:
-          colour = 'black';
+          colour = 'fuchsia';
           break;
       }
 
@@ -342,8 +356,20 @@ Dialogue.fn = Dialogue.prototype = {
     // TODO:text color alternation...
     // TODO:probably need to loop through and 
     // re-draw all the words from previous texts.
-    context.fillStyle = get_fill_style();
+    context.fillStyle = get_fill_style(); // TODO:set larger font size
     context.fillText( words, get_x(), get_y() );
+    return this;
+  },
+
+  /*
+  * add a text object to our list of texts.
+  * @param text (Text).
+  */
+  pushText: function( text ) {
+    debug("pushText, text:"+text);
+    var texts = this.texts || []; 
+    texts.push( text );
+    this.texts = texts;
     return this;
   }
 }; 
