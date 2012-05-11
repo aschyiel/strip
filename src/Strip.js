@@ -313,12 +313,16 @@ Dialogue.fn = Dialogue.prototype = {
       prev_y = 16,
       i = 0,
       get_fill_style,
+      colour,
+      x, 
+      y,
       get_x, 
       get_y;
   
     words = text.message;
 
     // TODO:allow different word-bubble strategies...
+    // TODO:move this outside of draw...
     get_x = function() {
       return prev_x += 16;  // TODO:alternative left and right.
     }
@@ -353,11 +357,48 @@ Dialogue.fn = Dialogue.prototype = {
       return colour;
     }
 
+    colour = get_fill_style(); // TODO:set larger font size
+
+    x = get_x();
+    y = get_y();
+    this.draw_speech_bubble( context, words, x, y, colour );
+
     // TODO:text color alternation...
     // TODO:probably need to loop through and 
     // re-draw all the words from previous texts.
-    context.fillStyle = get_fill_style(); // TODO:set larger font size
-    context.fillText( words, get_x(), get_y() );
+    context.fillStyle = colour;
+    context.fillText( words, x, y );
+    return this;
+  },
+
+  /*
+  * draw a speech bubble large enough to fit a given message.
+  * TODO:account for word wrap.
+  *
+  * @param ctx - 2d canvas context.
+  * @param s - String, the proposed text to make room for.
+  * @param x - number
+  * @param y - number
+  */
+  draw_speech_bubble: function( ctx, s, x, y, colour ) {
+    debug("draw_speech_bubble");
+    var bubble_width,
+      bubble_height,
+      padding = 16,
+      text_metrics = ctx.measureText( s ); 
+
+    bubble_width =  ~~(text_metrics.width + padding + 1);
+    bubble_height = 32; // TODO:more thorough text height measuring!
+
+    ctx.save();
+
+    ctx.globalAlpha = 0.2;
+    ctx.fillStyle = colour;
+    ctx.fillRect( x - padding, 
+        y - bubble_height/2, 
+        bubble_width, bubble_height );
+
+    ctx.restore();
     return this;
   },
 

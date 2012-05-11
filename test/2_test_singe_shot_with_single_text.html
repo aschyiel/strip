@@ -45,6 +45,7 @@ var setup_strip = function( image ) {
 
   dialogue = strip.newDialogue();
   dialogue.pushText( strip.newText("This is the text we want to show.") );
+  window.dialogue = dialogue;
 
   scene = strip.newScene()
     .setShot( shot )
