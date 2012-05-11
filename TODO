@@ -11,3 +11,7 @@ demo
 
 run jsHint
 figure out minify 
+
+add a "speech bubble" full text log?
+add animation with spray can "dots" for speech bubbles.
+figure out word-wrap for speech-bubbles.
