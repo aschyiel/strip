@@ -316,7 +316,7 @@ Dialogue.fn = Dialogue.prototype = {
       get_x, 
       get_y;
   
-    words = text.words;
+    words = text.message;
 
     // TODO:allow different word-bubble strategies...
     get_x = function() {
