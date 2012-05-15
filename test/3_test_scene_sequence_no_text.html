@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>test#3, sequence with 3 scenes (no text).</title>
+<script src="../lib/jquery.js"></script>
+<script src="../src/Strip.js"></script>
+<script type="text/javascript"> 
+
+$(document).ready(function(){ handle_document_ready(); });
+
+/*
+* make sure all of our image files are loaded before proceeding.
+* TODO:check if this is even needed...
+*/
+var initialize_resources = function() { 
+  debug( "..initialize_resources.." ); 
+
+  var fileName, 
+    image, 
+    files = [ "dilbert_1.gif", "dilbert_2.gif", "dilbert_3.gif" ],
+    loadStatus,
+    resources = {};
+
+  for ( fileName in files ) {
+    image = new Image(); 
+    image.isLoaded = false;
+    resources[fileName] = image;
+  }
+
+  window.resources = resources;
+
+  for ( fileName in files ) {
+    image = resources[fileName];
+    $(image).load(function(){
+      image.isLoaded = true;
+      loadStatus = $(resources).map(
+        function(){ var it = this; return $(it).isLoaded }).get();
+      if ( $.inArray(false, loadStatus) === -1 ) {
+        setup_strip($(resources).map(
+          function(){var it = this; return $(it)}).get()); 
+      }
+    });
+    image.src = "media/"+fileName;
+  } 
+}
+
+var handle_document_ready = function() {
+  debug( "..handle_document_ready.." ); 
+  initialize_resources();
+} 
+
+var debug = function( msg ) {
+  console.log(msg);
+}
+
+/*
+* @param images Array of images ready to be drawn.
+*/
+var setup_strip = function( images ) { 
+  debug( "..setup_strip.." ); 
+  window.images = images;
+//var strip = new Strip(),
+//  sequence = strip.newSequence(),
+//  scene,
+//  shot,
+//  dialogue,
+//  canvas = $('#stage')[0]; 
+
+//shot = strip.newShot();
+//shot.setImage( image );
+
+//dialogue = strip.newDialogue();
+//dialogue.pushText( strip.newText("This is the text we want to show; Below we see two little ponies making a lolcat-esque meme.") );
+//window.dialogue = dialogue;
+
+//scene = strip.newScene()
+//  .setShot( shot )
+//  .setDialogue( dialogue ); 
+//debug("scene:"+scene);
+//window.scene = scene;
+
+//sequence.pushScene( scene );
+//debug("sequence:"+sequence);
+//window.sequence = sequence;
+
+//debug( "canvas:"+canvas );
+//strip.setCanvas( canvas ).loadSequence( sequence ); 
+
+//return strip;
+} 
+
+</script>
+</head>
+<body>
+  <div style="position: absolute; top: 50px; left:50px">
+    <canvas id="stage" width="600" height="400">html5 canvas isn't!</canvas>
+  </div>
+</body>
+</html>
