@@ -18,19 +18,27 @@ var initialize_resources = function() {
 
   var fileName, 
     image, 
-    files = [ "dilbert_1.gif", "dilbert_2.gif", "dilbert_3.gif" ],
+    fileNames = [ "dilbert_1.gif", "dilbert_2.gif", "dilbert_3.gif" ],
     loadStatus,
     resources = {};
 
-  for ( fileName in files ) {
+  //
+  // setup our empty images.
+  //
+  $.each(fileNames, function(idx, fileName){
     image = new Image(); 
     image.isLoaded = false;
     resources[fileName] = image;
-  }
+  });
 
-  window.resources = resources;
-
-  for ( fileName in files ) {
+  window.resources = resources; 
+ 
+  //
+  // now carefully load each image,
+  // and when all resources are loaded, 
+  // continue on to the strip initialization.
+  //
+  $.each(fileNames, function(idx, fileName){
     image = resources[fileName];
     $(image).load(function(){
       image.isLoaded = true;
@@ -42,7 +50,7 @@ var initialize_resources = function() {
       }
     });
     image.src = "media/"+fileName;
-  } 
+  }); 
 }
 
 var handle_document_ready = function() {
