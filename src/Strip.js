@@ -59,12 +59,49 @@ Strip.fn = Strip.prototype = {
 
     ctx: null,
 
+    /**
+    * chainable,
+    * add a bunch of images and automagically 
+    * setup the internal sequence/scene model.
+    *
+    * @param images - an array of html5 images.
+    */
+    addImages: function( images ) {
+      debug("..addImages..");
+      var sequence = this.sequence || this.newSequence(),
+        scene;
+      $.each(images, function(idx, image) {
+        // TODO:newShot @image param
+        scene = this.newScene().setShot( this.newShot().setImage( image ) );
+        sequence.pushScene( scene );
+      });
+      this.loadSequence( sequence );
+      return this;
+    }
+
+    /*
+    * @private
+    * handle canvas mouse clicks.
+    * @param e - mouse click event.
+    */
+    handle_canvas_click: function( e ) {
+      debug("click");
+      var x = e.offsetX,
+        y = e.offsetY;
+      debug( "x:"+x );
+      debug( "y:"+y );
+      window.canvas_click = e;
+    },
+
     // public setter for our Strip's canvas.
     setCanvas: function( canvas ) {
-      debug("canvas:"+canvas);
+      debug("canvas:"+canvas); 
+
+      // TODO:remove listeners...
+      canvas.addEventListener('click', this.handle_canvas_click, false );
       this.canvas = canvas;
-      this.ctx = canvas.getContext('2d');
-      debug("strip.setCanvas, ctx:"+this.ctx);
+      this.ctx =    canvas.getContext('2d');
+      debug("strip.setCanvas, ctx:"+this.ctx); 
       return this;
     },
 

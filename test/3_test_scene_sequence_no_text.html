@@ -68,6 +68,9 @@ var debug = function( msg ) {
 var setup_strip = function( images ) { 
   debug( "..setup_strip.." ); 
   window.images = images;
+  var strip = new Strip(),
+    canvas = $('#stage')[0]; 
+
 //var strip = new Strip(),
 //  sequence = strip.newSequence(),
 //  scene,
