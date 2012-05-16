@@ -8,6 +8,15 @@
 */
 (function( window, undefined ){ 
 
+var warn = function( msg ) {
+  try {
+    console.warn( "DEBUG::"+msg );
+  }
+  catch ( e ) {
+    //..
+  } 
+};
+
 var debug = function( msg ) {
   try {
     console.log( "DEBUG::"+msg );
@@ -69,15 +78,29 @@ Strip.fn = Strip.prototype = {
     addImages: function( images ) {
       debug("..addImages..");
       var sequence = this.sequence || this.newSequence(),
-        scene;
-      $.each(images, function(idx, image) {
+        scene,
+        shot,
+        image,
+        i = 0,
+        len = images.length;
+      debug( "len:"+len );
+//    $.each(images, function(idx, image) {
+      for ( ; i<len; i++ ) {
+        image = images[i];
+        debug( "image:"+image );
         // TODO:newShot @image param
-        scene = this.newScene().setShot( this.newShot().setImage( image ) );
+        scene = new Scene.fn.init();
+        shot =  new Shot.fn.init();
+        window.image3 = image;
+        shot = shot.setImage( image );
+        //scene.setShot( shot.setImage( image ) );
+        scene.setShot( shot );
         sequence.pushScene( scene );
-      });
+//    });
+      }
       this.loadSequence( sequence );
       return this;
-    }
+    },
 
     /*
     * @private
@@ -90,7 +113,7 @@ Strip.fn = Strip.prototype = {
         y = e.offsetY;
       debug( "x:"+x );
       debug( "y:"+y );
-      window.canvas_click = e;
+      window.canvas_click = e;  // TODO:remove
     },
 
     // public setter for our Strip's canvas.
@@ -278,10 +301,15 @@ Scene.fn = Scene.prototype = {
 //},
 
   setup: function( ctx ) {
-    debug( "scene.setup" );
     debug( "scene.setup, ctx:"+ctx );
-    this.shot.draw( ctx );
-    this.dialogue.draw( ctx );  
+    if ( !this.shot ) {
+      warn( "missing shot" );
+    }
+    this.shot && this.shot.draw( ctx ); 
+    if ( !this.dialogue ) {
+      warn( "missing dialogue" );
+    }
+    this.dialogue && this.dialogue.draw( ctx );  
     return this;
   },
 
@@ -301,19 +329,16 @@ Shot.fn = Shot.prototype = {
     return this;
   }, 
   draw: function( context ) {
-    if ( !this.image ) {
-      debug( "image is missing!!!" ); // TODO:blank out?
+    var image = this.image;
+    if ( !image ) {
+      warn( "image is missing!!!" ); // TODO:blank out?
+    } else {
+      debug( "drawing image file:"+image.src );
+    }
+    if ( !context ) {
+      warn( "context is missing!" ); 
     } 
-    window.image2 = image;
-    window.context2 = context;
-    context.drawImage( this.image, 0, 0 );  // TODO
-//  context.strokeStyle = "#000000";
-//  context.fillStyle = "#FFFF00";
-//  context.beginPath();
-//  context.arc(100,100,50,0,Math.PI*2,true);
-//  context.closePath();
-//  context.stroke();
-//  context.fill();
+    context && image && context.drawImage( image, 0, 0 );  // TODO 
 
     return this;
   }, 

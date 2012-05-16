@@ -20,7 +20,9 @@ var initialize_resources = function() {
     image, 
     fileNames = [ "dilbert_1.gif", "dilbert_2.gif", "dilbert_3.gif" ],
     loadStatus,
-    resources = {};
+    resources = {},
+    initialized = false,
+    images = [];
 
   //
   // setup our empty images.
@@ -29,6 +31,7 @@ var initialize_resources = function() {
     image = new Image(); 
     image.isLoaded = false;
     resources[fileName] = image;
+    images.push(image);
   });
 
   window.resources = resources; 
@@ -44,9 +47,22 @@ var initialize_resources = function() {
       image.isLoaded = true;
       loadStatus = $(resources).map(
         function(){ var it = this; return $(it).isLoaded }).get();
-      if ( $.inArray(false, loadStatus) === -1 ) {
-        setup_strip($(resources).map(
-          function(){var it = this; return $(it)}).get()); 
+      window.loadStatus = loadStatus;
+      if ( $.inArray(false, loadStatus) === -1 ) { 
+        //
+        // TODO:jquery doesn't actually return arrays...
+        //
+//      setup_strip($(resources).map(
+//        function(){var it = this; return $(it)}).get()[0]); 
+
+//      images = $(resources).map(
+//        function(){var it = this; return $(it)}).get(0); 
+
+        window.images_original = images;
+        if ( !initialized )  {
+          setup_strip( images );
+          initialized = true;
+        }
       }
     });
     image.src = "media/"+fileName;
@@ -71,34 +87,12 @@ var setup_strip = function( images ) {
   var strip = new Strip(),
     canvas = $('#stage')[0]; 
 
-//var strip = new Strip(),
-//  sequence = strip.newSequence(),
-//  scene,
-//  shot,
-//  dialogue,
-//  canvas = $('#stage')[0]; 
+  strip.setCanvas( canvas );
+  window.strip = strip;
+  window.canvas = canvas;
 
-//shot = strip.newShot();
-//shot.setImage( image );
-
-//dialogue = strip.newDialogue();
-//dialogue.pushText( strip.newText("This is the text we want to show; Below we see two little ponies making a lolcat-esque meme.") );
-//window.dialogue = dialogue;
-
-//scene = strip.newScene()
-//  .setShot( shot )
-//  .setDialogue( dialogue ); 
-//debug("scene:"+scene);
-//window.scene = scene;
-
-//sequence.pushScene( scene );
-//debug("sequence:"+sequence);
-//window.sequence = sequence;
-
-//debug( "canvas:"+canvas );
-//strip.setCanvas( canvas ).loadSequence( sequence ); 
-
-//return strip;
+  strip.addImages( images ); 
+  strip.action(); 
 } 
 
 </script>
