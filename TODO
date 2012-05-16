@@ -15,3 +15,7 @@ figure out minify
 add a "speech bubble" full text log?
 add animation with spray can "dots" for speech bubbles.
 figure out word-wrap for speech-bubbles.
+
+rename "new" to "create", ie. Strip.createShot instead of Strip.newShot
+
+TODO: more model creation helpers...
