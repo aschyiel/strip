@@ -103,6 +103,43 @@ Strip.fn = Strip.prototype = {
     },
 
     /*
+    * draw the previous/next buttons for the strip.
+    * @param ctx - the 2d drawing context.
+    */
+    draw_buttons: function( ctx ) { 
+      var h = this.canvas.height,
+        w = this.canvas.width,
+        bh = this.button_height,
+        bw = this.button_width;
+
+      var next_x = 0,
+        next_y = h - bh,
+        prev_x = w - bw,
+        prev_y = h - bh;
+
+      ctx.save();
+
+      ctx.globalAlpha = 0.2;
+      ctx.fillStyle = '#0000aa';
+      ctx.fillRect( next_x, next_y, bw, bh );
+      ctx.fillRect( prev_x, prev_y, bw, bh );
+
+      ctx.globalAlpha = 1;
+      ctx.fillText( '<--', prev_x, prev_y );
+      ctx.fillText( '-->', next_x, next_y );
+
+      ctx.restore(); 
+    },
+
+    /*
+    * dimensions for our Strip next/previous buttons.
+    */
+    button_height: 25, 
+    button_width: 75,
+    canvas_height: -1,
+    canvas_width: -1,
+
+    /*
     * @private
     * handle canvas mouse clicks.
     * @param e - mouse click event.
@@ -110,10 +147,87 @@ Strip.fn = Strip.prototype = {
     handle_canvas_click: function( e ) {
       debug("click");
       var x = e.offsetX,
-        y = e.offsetY;
+        y = e.offsetY,
+        button_height = this.button_height,
+        button_width =  this.button_width,
+        height = this.canvas_height,
+        width = this.canvas_width;
       debug( "x:"+x );
       debug( "y:"+y );
       window.canvas_click = e;  // TODO:remove
+
+      // TODO abstract button click regions...
+
+      //
+      // the <- button on the bottom left.
+      //
+      if ( this.is_coords_within_rectangle( x, y,
+          0, height - button_height,
+          button_width, button_height ) ) {
+        this.go_back();
+      //
+      // the -> button on the bottom right.
+      //
+      } else if ( this.is_coords_within_rectangle( x, y,  
+          width - button_width, height - button_height,
+          button_width, button_height ) ) {
+        this.go_forward();
+      }
+    },
+
+    /*
+    * is point x,y within the bounds of box, xy 1~4
+    * where x1,y1 is the top left corner, and it goes clockwise
+    * (ie. bottom left corner is designated as x4, y4).
+    *
+    * TODO:this does not anticipate none orthogonal shapes.
+    *
+    * @return boolean
+    */
+    is_coords_within_box: function( x,  y, 
+                          x1, y1, ///* top left */
+                          x2, y2, ///* top right */
+                          x3, y3, ///* bottom right */
+                          x4, y4  ///* bottom left */ 
+                          ) { 
+      return ( x >= x1
+        && x <= x2
+        && y >= y1
+        && y <= y4 );
+    },
+
+    /*
+    * is point x,y within the region of a rectangle,
+    * the rectangle is described by it's top left coordinates (x1,y1),
+    * and it's dimensions of width and height.
+    *
+    * @param x - the x coordinate of the point of interest.
+    * @param y - the y coordinate of the point of interest.
+    * @param x1 top left x coordinate of the rectangle.
+    * @param y1 top left y coordinate of the rectangle
+    * @param w width of the rectangular region.
+    * @param h height of the rectangular region.
+    *
+    * @return boolean
+    */
+    is_coords_within_rectangle: function( x, y, x1, y1, w, h ) {
+      return is_coords_within_box( 
+        x,    y,  
+        x1+w, y1,
+        x1+w, y1+h,
+        x1,   y1+h );
+    },
+
+    go_back: function() {
+      debug( "go_back" );
+      this.previous(); 
+      return this;
+    },
+
+    go_forward: function() {
+      debug( "go_forward" );
+      this.next();
+      return this;
     },
 
     // public setter for our Strip's canvas.
@@ -124,6 +238,8 @@ Strip.fn = Strip.prototype = {
       canvas.addEventListener('click', this.handle_canvas_click, false );
       this.canvas = canvas;
       this.ctx =    canvas.getContext('2d');
+      this.canvas_height = canvas.height;
+      this.canvas_width =  canvas.width;
       debug("strip.setCanvas, ctx:"+this.ctx); 
       return this;
     },
@@ -135,6 +251,7 @@ Strip.fn = Strip.prototype = {
         debug( "sequence is null!" );
       }
       this.sequence.setContext(this.ctx).action();
+      this.draw_buttons(this.ctx);
       return this;
     },
 
@@ -148,7 +265,8 @@ Strip.fn = Strip.prototype = {
     next: function() { 
       var scene = sequence.scenes[ sequence.selected_scene_index + 1 ];
       scene = scene || sequence.scenes[0];
-      scene && this.sequence.loadScene( scene ).setContext( this.ctx ).action();
+      //scene && this.sequence.loadScene( scene ).setContext( this.ctx ).action(); //TODO
+      this.action();
       return this;
     },
 
@@ -156,7 +274,8 @@ Strip.fn = Strip.prototype = {
     previous: function() { 
       var scene = sequence.scenes[ sequence.selected_scene_index - 1 ];
       scene = scene || sequence.scenes[0];
-      scene && this.sequence.loadScene( scene ).setContext( this.ctx ).action();
+      //scene && this.sequence.loadScene( scene ).setContext( this.ctx ).action(); //TODO
+      this.action();
       return this; 
     },
 
@@ -310,6 +429,7 @@ Scene.fn = Scene.prototype = {
       warn( "missing dialogue" );
     }
     this.dialogue && this.dialogue.draw( ctx );  
+
     return this;
   },
 
