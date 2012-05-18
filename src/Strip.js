@@ -140,42 +140,6 @@ Strip.fn = Strip.prototype = {
     canvas_width: -1,
 
     /*
-    * @private
-    * handle canvas mouse clicks.
-    * @param e - mouse click event.
-    */
-    handle_canvas_click: function( e ) {
-      debug("click");
-      var x = e.offsetX,
-        y = e.offsetY,
-        button_height = this.button_height,
-        button_width =  this.button_width,
-        height = this.canvas_height,
-        width = this.canvas_width;
-      debug( "x:"+x );
-      debug( "y:"+y );
-      window.canvas_click = e;  // TODO:remove
-
-      // TODO abstract button click regions...
-
-      //
-      // the <- button on the bottom left.
-      //
-      if ( this.is_coords_within_rectangle( x, y,
-          0, height - button_height,
-          button_width, button_height ) ) {
-        this.go_back();
-      //
-      // the -> button on the bottom right.
-      //
-      } else if ( this.is_coords_within_rectangle( x, y,  
-          width - button_width, height - button_height,
-          button_width, button_height ) ) {
-        this.go_forward();
-      }
-    },
-
-    /*
     * is point x,y within the bounds of box, xy 1~4
     * where x1,y1 is the top left corner, and it goes clockwise
     * (ie. bottom left corner is designated as x4, y4).
@@ -211,7 +175,7 @@ Strip.fn = Strip.prototype = {
     * @return boolean
     */
     is_coords_within_rectangle: function( x, y, x1, y1, w, h ) {
-      return is_coords_within_box( 
+      return this.is_coords_within_box( 
         x,    y,  
         x1+w, y1,
         x1+w, y1+h,
@@ -232,10 +196,13 @@ Strip.fn = Strip.prototype = {
 
     // public setter for our Strip's canvas.
     setCanvas: function( canvas ) {
+      var strip = this;
       debug("canvas:"+canvas); 
 
       // TODO:remove listeners...
-      canvas.addEventListener('click', this.handle_canvas_click, false );
+      canvas.parent_strip = this; // TODO:i feel dirty about this...
+      canvas.addEventListener('click', 
+        function(e){strip.handle_canvas_click(strip,e)}, false );
       this.canvas = canvas;
       this.ctx =    canvas.getContext('2d');
       this.canvas_height = canvas.height;
@@ -243,6 +210,49 @@ Strip.fn = Strip.prototype = {
       debug("strip.setCanvas, ctx:"+this.ctx); 
       return this;
     },
+
+    /*
+    * @private
+    * handle canvas mouse clicks.
+    *
+    * we have to carefully bind the scope here back to strip...
+    *
+    * @param e - mouse click event.
+    * @param strip - the strip handling the mouse click.
+    */
+    handle_canvas_click: function( strip, e ) {
+      debug("handle_canvas_click");
+      debug( "strip:"+strip );
+      debug( "e:"+e );
+      var x = e.offsetX,
+        y = e.offsetY,
+        button_height = strip.button_height,
+        button_width =  strip.button_width,
+        height = strip.canvas_height,
+        width = strip.canvas_width;
+      debug( "x:"+x );
+      debug( "y:"+y );
+      window.canvas_click = e;  // TODO:remove
+
+      // TODO abstract button click regions...
+
+      //
+      // the <- button on the bottom left.
+      //
+      if ( strip.is_coords_within_rectangle.apply( strip, [ x, y,
+          0, height - button_height,
+          button_width, button_height ] ) ) {
+        strip.go_back.apply(strip);
+      //
+      // the -> button on the bottom right.
+      //
+      } else if ( strip.is_coords_within_rectangle.apply( strip, [ x, y,  
+          width - button_width, height - button_height,
+          button_width, button_height ] ) ) {
+        strip.go_forward.apply(strip);
+      }
+    },
+
 
     // synonymous with "start".
     action: function() {
