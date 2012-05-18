@@ -154,6 +154,11 @@ Strip.fn = Strip.prototype = {
                           x3, y3, ///* bottom right */
                           x4, y4  ///* bottom left */ 
                           ) { 
+//    debug( "x,y:"+x+","+y );
+//    debug( "x1,y1:"+x1+","+y1 );
+//    debug( "x2,y2:"+x2+","+y2 );
+//    debug( "x3,y3:"+x3+","+y3 );
+//    debug( "x4,y4:"+x4+","+y4 );
       return ( x >= x1
         && x <= x2
         && y >= y1
@@ -177,9 +182,10 @@ Strip.fn = Strip.prototype = {
     is_coords_within_rectangle: function( x, y, x1, y1, w, h ) {
       return this.is_coords_within_box( 
         x,    y,  
+        x1,   y1,
         x1+w, y1,
         x1+w, y1+h,
-        x1,   y1+h );
+        x1,   y1+h ); 
     },
 
     go_back: function() {
@@ -250,7 +256,7 @@ Strip.fn = Strip.prototype = {
           width - button_width, height - button_height,
           button_width, button_height ] ) ) {
         strip.go_forward.apply(strip);
-      }
+      } 
     },
 
 
