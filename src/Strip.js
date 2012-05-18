@@ -218,6 +218,8 @@ Strip.fn = Strip.prototype = {
       canvas.parent_strip = this; // TODO:i feel dirty about this...
       canvas.addEventListener('click', 
         function(e){strip.handle_canvas_click(strip,e)}, false );
+      window.addEventListener('keyup', 
+        function(e){strip.handle_canvas_keypress(strip,e)}, false ); 
       this.canvas = canvas;
       this.ctx =    canvas.getContext('2d');
       this.canvas_height = canvas.height;
@@ -237,16 +239,12 @@ Strip.fn = Strip.prototype = {
     */
     handle_canvas_click: function( strip, e ) {
       debug("handle_canvas_click");
-//    debug( "strip:"+strip );
-//    debug( "e:"+e );
       var x = e.offsetX,
         y = e.offsetY,
         button_height = strip.button_height,
         button_width =  strip.button_width,
         height = strip.canvas_height,
         width = strip.canvas_width;
-//    debug( "x:"+x );
-//    debug( "y:"+y );
       window.canvas_click = e;  // TODO:remove
 
       // TODO abstract button click regions...
@@ -268,6 +266,40 @@ Strip.fn = Strip.prototype = {
       } 
     },
 
+    /*
+    * @private,
+    *
+    * handle canvas keyboard presses.
+    *
+    * @param strip - the passed in strip scope.
+    * @param e - the keypress event.
+    */
+    handle_canvas_keypress: function( strip, e ) {
+      debug("handle_canvas_keypress");
+      var button_height = strip.button_height,
+        button_width =  strip.button_width,
+        height = strip.canvas_height,
+        width = strip.canvas_width;
+      window.keypress_event = e;  // TODO:remove
+      console.log( "keyCode:"+e.keyCode );
+
+      //
+      // see http://www.cambiaresearch.com/articles/15/javascript-char-codes-key-codes
+      //
+      switch ( e.keyCode ) {
+        case 39:  // -->
+        case 32:  // spacebar
+          strip.go_forward.apply(strip);
+          break;
+        case 37:  // <--
+        case 8:   // backspace
+          strip.go_back.apply(strip);
+          break;
+        default:
+          console.warn( "TODO: handle keyCode:"+e.keyCode );
+          break;
+      } 
+    }, 
 
     // synonymous with "start".
     action: function() {
