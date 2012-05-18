@@ -115,7 +115,10 @@ Strip.fn = Strip.prototype = {
       var next_x = 0,
         next_y = h - bh,
         prev_x = w - bw,
-        prev_y = h - bh;
+        prev_y = h - bh,
+        mid_bh = bh / 2,
+        mid_bw = bw / 2,
+        guess = 20;
 
       ctx.save();
 
@@ -125,9 +128,15 @@ Strip.fn = Strip.prototype = {
       ctx.fillRect( prev_x, prev_y, bw, bh );
 
       ctx.globalAlpha = 1;
-      ctx.fillText( '<--', prev_x, prev_y );
-      ctx.fillText( '-->', next_x, next_y );
+//    ctx.fillText( 'next -->', prev_x + mid_bw, prev_y + mid_bh );
+//    ctx.fillText( '<-- prev', next_x + mid_bw, next_y + mid_bh );
 
+      ctx.fillText( 'next -->', 
+        prev_x + mid_bw - guess, 
+        prev_y + mid_bh );
+      ctx.fillText( '<-- prev', 
+        next_x + mid_bw - guess , 
+        next_y + mid_bh );
       ctx.restore(); 
     },
 
@@ -228,16 +237,16 @@ Strip.fn = Strip.prototype = {
     */
     handle_canvas_click: function( strip, e ) {
       debug("handle_canvas_click");
-      debug( "strip:"+strip );
-      debug( "e:"+e );
+//    debug( "strip:"+strip );
+//    debug( "e:"+e );
       var x = e.offsetX,
         y = e.offsetY,
         button_height = strip.button_height,
         button_width =  strip.button_width,
         height = strip.canvas_height,
         width = strip.canvas_width;
-      debug( "x:"+x );
-      debug( "y:"+y );
+//    debug( "x:"+x );
+//    debug( "y:"+y );
       window.canvas_click = e;  // TODO:remove
 
       // TODO abstract button click regions...
@@ -279,19 +288,42 @@ Strip.fn = Strip.prototype = {
 
     // go to the next scene.
     next: function() { 
-      var scene = sequence.scenes[ sequence.selected_scene_index + 1 ];
-      scene = scene || sequence.scenes[0];
-      //scene && this.sequence.loadScene( scene ).setContext( this.ctx ).action(); //TODO
-      this.action();
-      return this;
+      return this.change_scenes(true);
     },
 
     // go to the previous scene.
     previous: function() { 
-      var scene = sequence.scenes[ sequence.selected_scene_index - 1 ];
-      scene = scene || sequence.scenes[0];
-      //scene && this.sequence.loadScene( scene ).setContext( this.ctx ).action(); //TODO
-      this.action();
+      return this.change_scenes(false);
+    },
+
+    /*
+    * change scenes for our strip, called by next/previous.
+    *
+    * @param next - boolean, when true will increment the selected scene, 
+    *               otherwise it will go backwards.
+    */
+    change_scenes: function( next ) {
+      console.log("change_scenes, next:"+next);
+      next = ( typeof next !== 'undefined' )? next : true;
+
+      var strip = this,
+        sequence = this.sequence;
+
+      // TODO:move this logic to live under sequence...
+      if ( next ) {
+        sequence.current_scene_index += 1;
+      } else { 
+        sequence.current_scene_index -= 1;
+      } 
+      if ( sequence.current_scene_index > sequence.number_of_scenes - 1 ) {
+        sequence.current_scene_index = sequence.number_of_scenes - 1;
+      } else if ( sequence.current_scene_index < 0 ) { 
+        sequence.current_scene_index = 0;
+      }
+
+      sequence.load_current_scene();
+
+      strip.draw_buttons(strip.ctx);
       return this; 
     },
 
@@ -388,20 +420,25 @@ Sequence.fn = Sequence.prototype = {
       }
     }
 
-    scene.setup( ctx );
+    scene.setup( this.ctx );
 
     return this;
   },
 
+  number_of_scenes: 0,
+
   // add a scene to the sequence stack.
   pushScene: function( scene ) {
-    this.scenes = this.scenes || [];
-    this.scenes.push( scene );
-    return this;
+    var sequence = this;
+    sequence.scenes = sequence.scenes || [];
+    sequence.scenes.push( scene );
+    sequence.number_of_scenes = sequence.scenes.length;
+    return sequence;
   },
 
   clearScenes: function() {
     this.scenes = [];
+    this.number_of_scenes = 0;
     return this;
   },
 
