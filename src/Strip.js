@@ -301,14 +301,31 @@ Strip.fn = Strip.prototype = {
       } 
     }, 
 
-    // synonymous with "start".
+    /**
+    * Strip.action
+    * synonymous with "start".
+    */
     action: function() {
       debug("strip.action");
       if ( !this.sequence ) {
         debug( "sequence is null!" );
       }
+      this.clear_canvas();
       this.sequence.setContext(this.ctx).action();
       this.draw_buttons(this.ctx);
+      return this;
+    },
+
+    /**
+    * Strip.clear_canvas.
+    */
+    clear_canvas: function() {
+      var ctx = this.ctx,
+        h = this.canvas.height,
+        w = this.canvas.width;
+      ctx.clearRect( 0, 0, w, h );
+      ctx.fillStyle = '#808080';
+      ctx.fillRect( 0, 0, w, h );
       return this;
     },
 
@@ -353,8 +370,9 @@ Strip.fn = Strip.prototype = {
         sequence.current_scene_index = 0;
       }
 
-      sequence.load_current_scene();
-
+      // TODO call action instead!
+      strip.clear_canvas();
+      sequence.load_current_scene(); 
       strip.draw_buttons(strip.ctx);
       return this; 
     },
@@ -364,19 +382,44 @@ Strip.fn = Strip.prototype = {
       return new Sequence.fn.init();
     },
 
-    newShot: function() {
+    newShot: function( image ) {
       debug("Strip.newShot");
-      return new Shot.fn.init();
+      var shot = new Shot.fn.init();
+      image && shot.setImage( image );
+      return shot;
     },
 
-    newScene: function() {
+    newScene: function( image, lines ) {
       debug("Strip.newScene()");
-      return new Scene.fn.init();
+      var scene = new Scene.fn.init(),
+        strip = this;
+
+      image && scene.setShot(     strip.newShot(     image ) );
+      lines && scene.setDialogue( strip.newDialogue( lines ) ); 
+      return scene;
     },
 
-    newDialogue: function() {
+    /**
+    * add a new scene to our strip, 
+    * and automatically include it into our current scene sequence.
+    *
+    * @return (Scene) - the newly created scene.
+    */
+    addNewScene: function( image, lines ) { 
+      var scene,
+        strip = this; 
+      scene = strip.newScene( image, lines );
+      strip.sequence = strip.sequence || strip.newSequence();
+      strip.sequence.pushScene( scene );
+
+      return scene;
+    },
+
+    newDialogue: function( lines ) {
       debug("Strip.newDialogue()");
-      return new Dialogue.fn.init();
+      var dialogue = new Dialogue.fn.init();
+      lines && dialogue.addLines( lines );      
+      return dialogue;
     },
 
     newText: function(msg) {
@@ -667,6 +710,33 @@ Dialogue.fn = Dialogue.prototype = {
 
     ctx.restore();
     return this;
+  },
+
+  /**
+  * add a list of speech lines (strings) to our dialogue.
+  */
+  addLines: function( lines ) {
+    var i = 0, 
+      len = lines && lines.length,
+      dialogue = this;
+
+    for ( ; i < len; i++ ) {
+      dialogue.addLine( lines[i] );
+    }
+
+    return this;
+  },
+
+  /**
+  * add a single speech line (string) to our dialogue.
+  */
+  addLine: function( msg ) {
+    if ( !msg ) {
+      warn( "dialogue addLine given empty message/speech-line." );
+    } 
+    var text = new Text.fn.init(),
+      dialogue = this; 
+    return dialogue.pushText( text.setMessage( msg ) ); 
   },
 
   /*
