@@ -337,12 +337,24 @@ Strip.fn = Strip.prototype = {
 
     // go to the next scene.
     next: function() { 
-      return this.change_scenes(true);
+      var sequence = this.sequence;
+      if ( sequence.is_at_end_of_current_scene() ) {
+        this.change_scenes(true);
+      } else {
+        sequence.move_dialogue_forward();
+      }
+      return this; 
     },
 
     // go to the previous scene.
     previous: function() { 
-      return this.change_scenes(false);
+      var sequence = this.sequence;
+      if ( sequence.is_at_beginning_of_current_scene() ) {
+        this.change_scenes(false);
+      } else {
+        sequence.move_dialogue_backward();
+      }
+      return this;
     },
 
     /*
@@ -356,19 +368,18 @@ Strip.fn = Strip.prototype = {
       next = ( typeof next !== 'undefined' )? next : true;
 
       var strip = this,
-        sequence = this.sequence;
+        sequence = this.sequence,
+        scene_incrementor = (next)? 1 : -1;
 
-      // TODO:move this logic to live under sequence...
-      if ( next ) {
-        sequence.current_scene_index += 1;
-      } else { 
-        sequence.current_scene_index -= 1;
-      } 
+      // TODO:should all of this logic to live under sequence?
+      sequence.current_scene_index += scene_incrementor;
+
+      // catch falling off edges
       if ( sequence.current_scene_index > sequence.number_of_scenes - 1 ) {
         sequence.current_scene_index = sequence.number_of_scenes - 1;
       } else if ( sequence.current_scene_index < 0 ) { 
         sequence.current_scene_index = 0;
-      }
+      } 
 
       // TODO call action instead!
       strip.clear_canvas();
@@ -462,21 +473,60 @@ Sequence.fn = Sequence.prototype = {
     return this;
   },
 
+  /**
+  * return the sequence's currently selected scene.
+  * @return Scene.
+  */
+  get_current_scene: function() {
+    var scene,
+      idx = this.current_scene_index;
+
+    debug( "idx:"+idx );
+    scene = this.scenes[ idx ]; 
+    debug( "scene:"+scene );
+
+    return scene;
+  },
+
+  /**
+  * is the currently selected scene in our sequence all played out?
+  * in other words, are we ready for the next scene to be displayed?
+  *
+  * @return boolean
+  */ 
+  is_at_end_of_current_scene: function() {
+    var seq = this;
+    return seq.get_current_scene().is_at_end(); 
+  },
+
+  /**
+  * is the currently selected scene in the sequence at the very beginning?
+  *
+  * @return boolean
+  */ 
+  is_at_beginning_of_current_scene: function() {
+    var seq = this;
+    return seq.get_current_scene().is_at_beginning();
+  },
+
+  move_dialogue_forward: function() {
+    var seq = this;
+    return seq.get_current_scene().move_dialogue_forward();
+  },
+
+  move_dialogue_backward: function() {
+    var seq = this;
+    return seq.get_current_scene().move_dialogue_backward();
+  },
+
   //
   //  load the currently selected scene by index.
   //
   load_current_scene: function() {
     debug("load_current_scene");
-    var scene,
-      idx = this.current_scene_index,
-      ctx = this.ctx;
-
-    debug( "idx:"+idx );
-    scene = this.scenes[ idx ]; 
-
-    debug( "scene:"+scene );
+    var scene = this.get_current_scene(),
+      ctx = this.ctx; 
     debug( "ctx:"+ctx );    
-
     scene.setup( ctx );
 
     return this;
@@ -540,12 +590,70 @@ Scene.fn = Scene.prototype = {
     return this;
   }, 
 
-// TODO, this would be a nice wrapper...
-//addWords: function( s ) {
-//  dialogue = dialogue || Strip.newDialogue();
-//  dialogue.addText( Text..newText( s ) ); //TODO:this will fail
-//  return this;
-//},
+
+
+  /**
+  * is the currently selected scene in our sequence all played out?
+  * in other words, are we ready for the next scene to be displayed?
+  *
+  * @return boolean
+  */
+  is_at_end: function() {
+    var dialogue = this.dialogue;
+    if ( 'undefined' === typeof dialogue ) {
+      return true; 
+    } 
+    return dialogue.texts.length - 1 === dialogue.selected_index;
+  },
+
+  /**
+  * is the currently selected scene in the sequence at the very beginning?
+  *
+  * @return boolean
+  */
+  is_at_beginning: function() {
+    var dialogue = this.dialogue;
+    if ( 'undefined' === typeof dialogue ) {
+      return true; 
+    }
+    return 0 === dialogue.selected_index;
+  },
+
+  /**
+  * move the dialogue forward by one speech bubble.
+  */
+  move_dialogue_forward: function() {
+    return this.move_dialogue( true );
+  },
+
+  /**
+  * move the dialogue backward by one speech bubble.
+  */
+  move_dialogue_backward: function() {
+    return this.move_dialogue( false );
+  },
+
+  move_dialogue: function( forward ) {
+    var dialogue = this.dialogue,
+      max_text_index = this.dialogue.texts.length - 1;
+    if ( 'undefined' === typeof dialogue ) { 
+      return this; 
+    }
+
+    if ( forward ) {
+      dialogue.selectedIndex += 1;
+    } else { 
+      dialogue.selectedIndex -= 1;
+    }
+
+    if ( dialogue.selectedIndex < 0 ) {
+      dialogue.selectedIndex = 0;
+    } else if ( dialogue.selectedIndex > max_text_index  ) {
+      dialogue.selectedIndex = max_text_index;
+    } 
+
+    return this; 
+  },
 
   setup: function( ctx ) {
     debug( "scene.setup, ctx:"+ctx );
