@@ -335,36 +335,49 @@ Strip.fn = Strip.prototype = {
       return this;
     },
 
-    // go to the next scene.
+    /* 
+    * Strip.next
+    * go to the next scene.
+    */
     next: function() { 
       var sequence = this.sequence;
       if ( sequence.is_at_end_of_current_scene() ) {
-        this.change_scenes(true);
+        if ( sequence.has_next_scene() ) {
+          this.change_scenes(true);
+        } else {
+          warn( "at end of strip's sequence. TODO show fin" );
+        }
       } else {
         sequence.move_dialogue_forward();
       }
       return this; 
     },
 
-    // go to the previous scene.
+    /* 
+    * Strip.previous
+    * go to the previous scene.
+    */ 
     previous: function() { 
       var sequence = this.sequence;
-      if ( sequence.is_at_beginning_of_current_scene() ) {
-        this.change_scenes(false);
-      } else {
-        sequence.move_dialogue_backward();
-      }
+//    if ( sequence.is_at_beginning_of_current_scene() ) {
+//      this.change_scenes(false);
+//    } else {
+//      sequence.move_dialogue_backward();
+//    }
+  
+      this.change_scenes(false);
       return this;
     },
 
     /*
+    * Strip.change_scenes
     * change scenes for our strip, called by next/previous.
     *
     * @param next - boolean, when true will increment the selected scene, 
     *               otherwise it will go backwards.
     */
     change_scenes: function( next ) {
-      console.log("change_scenes, next:"+next);
+      console.log("strip.change_scenes, next:"+next);
       next = ( typeof next !== 'undefined' )? next : true;
 
       var strip = this,
@@ -485,11 +498,25 @@ Sequence.fn = Sequence.prototype = {
     var scene,
       idx = this.current_scene_index;
 
-    debug( "idx:"+idx );
+    debug( "Sequence.get_current_scene.idx:"+idx );
     scene = this.scenes[ idx ]; 
-    debug( "scene:"+scene );
+    debug( "Sequence.get_current_scene.scene:"+scene );
 
     return scene;
+  },
+
+  /**
+  * Sequence.has_next_scene
+  * is there another scene that comes after this one?
+  * in other words, are we at the end of our sequence?
+  *
+  * @return boolean
+  */
+  has_next_scene: function() {
+    var seq = this,
+      idx = this.current_scene_index,
+      len = this.scenes.length;
+    return idx < (len - 1);
   },
 
   /**
@@ -514,6 +541,7 @@ Sequence.fn = Sequence.prototype = {
   },
 
   move_dialogue_forward: function() {
+    debug("Sequence.move_dialogue_forward");
     var seq = this;
     return seq.get_current_scene().move_dialogue_forward();
   },
@@ -523,14 +551,15 @@ Sequence.fn = Sequence.prototype = {
     return seq.get_current_scene().move_dialogue_backward();
   },
 
-  //
-  //  load the currently selected scene by index.
-  //
+  /*
+  * Sequence.load_current_scene
+  * load the currently selected scene by index.
+  */
   load_current_scene: function() {
-    debug("load_current_scene");
+    debug("sequence.load_current_scene");
     var scene = this.get_current_scene(),
       ctx = this.ctx; 
-    debug( "ctx:"+ctx );    
+    scene.dialogue && scene.dialogue.reset();
     scene.setup( ctx );
 
     return this;
@@ -594,9 +623,8 @@ Scene.fn = Scene.prototype = {
     return this;
   }, 
 
-
-
   /**
+  * Scene.is_at_end
   * is the currently selected scene in our sequence all played out?
   * in other words, are we ready for the next scene to be displayed?
   *
@@ -611,6 +639,7 @@ Scene.fn = Scene.prototype = {
   },
 
   /**
+  * Scene.is_at_beginning
   * is the currently selected scene in the sequence at the very beginning?
   *
   * @return boolean
@@ -624,43 +653,59 @@ Scene.fn = Scene.prototype = {
   },
 
   /**
+  * Scene.move_dialogue_forward
   * move the dialogue forward by one speech bubble.
+  * called by parent Sequence.
   */
   move_dialogue_forward: function() {
     return this.move_dialogue( true );
   },
 
   /**
+  * Scene.move_dialogue_backward
   * move the dialogue backward by one speech bubble.
+  * called by parent Sequence.
   */
   move_dialogue_backward: function() {
     return this.move_dialogue( false );
   },
 
+  /**
+  * Scene.move_dialogue
+  * move our dialogue and redraw our speech bubble.
+  */
   move_dialogue: function( forward ) {
+    debug( "Scene.move_dialogue" );
     var dialogue = this.dialogue,
       max_text_index = this.dialogue.texts.length - 1;
     if ( 'undefined' === typeof dialogue ) { 
+      warn( "no dialogue!" );
       return this; 
     }
 
+    debug( "Scene.move_dialogue, dialogue.selected_index was:"+dialogue.selected_index );
+
     if ( forward ) {
-      dialogue.selectedIndex += 1;
+      dialogue.selected_index += 1;
     } else { 
-      dialogue.selectedIndex -= 1;
+      dialogue.selected_index -= 1;
     }
 
-    if ( dialogue.selectedIndex < 0 ) {
-      dialogue.selectedIndex = 0;
-    } else if ( dialogue.selectedIndex > max_text_index  ) {
-      dialogue.selectedIndex = max_text_index;
+    if ( dialogue.selected_index < 0 ) {
+      dialogue.selected_index = 0;
+    } else if ( dialogue.selected_index > max_text_index  ) {
+      dialogue.selected_index = max_text_index;
     } 
+
+    debug( "Scene.move_dialogue, dialogue.selected_index is now:"+dialogue.selected_index );
+    dialogue.draw( this.ctx );
 
     return this; 
   },
 
   setup: function( ctx ) {
     debug( "scene.setup, ctx:"+ctx );
+    this.ctx = ctx;
     if ( !this.shot ) {
       warn( "missing shot" );
     }
@@ -676,6 +721,7 @@ Scene.fn = Scene.prototype = {
   /* the shot used in this scene. */
   shot: null,
   dialogue: null,
+  ctx: null,
 
   setDialogue: function( dialogue ) {
     this.dialogue = dialogue;
@@ -716,15 +762,45 @@ Dialogue.fn = Dialogue.prototype = {
   constructor: Dialogue, 
   init: function() { 
     this.texts = [];
+    this.selected_index = 0;
+    this.prev_x = 16;
+    this.prev_y = 32;
     return this;
   },
+
+  /*
+  * Dialogue.reset
+  * reset our dialogue speech-bubbles drawing, etc.
+  */
+  reset: function() {
+    debug( "Dialogue.reset" );
+    this.prev_x = 16;
+    this.prev_y = 32; 
+  },
+
+  prev_x: null,
+  prev_y: null,
 
   texts: null,
 
   /* the currently selected text index. */
-  selected_index: 0, 
+  selected_index: null, 
 
-  /* draw the dialogue's words/text onto the stage. */
+  //
+  // TODO:allow different word-bubble strategies...
+  //
+  get_x: function() { 
+    return this.prev_x += 16;  // TODO:alternative left and right.
+  },
+
+  get_y: function() {
+    return this.prev_y += 32;  // TODO:needs to be lower on the canvas!
+  },
+
+  /* 
+  * Dialogue.draw
+  * draw the dialogue's words/text onto the stage. 
+  */ 
   //
   //  TODO:how do we know where to put the text relative to the image?
   //
@@ -732,8 +808,6 @@ Dialogue.fn = Dialogue.prototype = {
     debug("dialogue.draw");
     var text = this.texts[this.selected_index], 
       words,
-      prev_x = ~~(width*0.5), 
-      prev_y = 16,
       i = 0,
       get_fill_style,
       colour,
@@ -742,22 +816,12 @@ Dialogue.fn = Dialogue.prototype = {
       get_x, 
       get_y;
   
-    words = text.message;
-
-    // TODO:allow different word-bubble strategies...
-    // TODO:move this outside of draw...
-    get_x = function() {
-      return prev_x += 16;  // TODO:alternative left and right.
-    }
-
-    get_y = function() {
-      return prev_y += 32;  // TODO:needs to be lower on the canvas!
-    }
+    words = text.message; 
 
     get_fill_style = function() {
       switch ( i ) {
         case 0:
-          colour = 'aqua';
+          colour = 'black';
           break;
         case 1:
           colour = 'red';
@@ -782,8 +846,8 @@ Dialogue.fn = Dialogue.prototype = {
 
     colour = get_fill_style(); // TODO:set larger font size
 
-    x = get_x();
-    y = get_y();
+    x = this.get_x();
+    y = this.get_y();
     this.draw_speech_bubble( context, words, x, y, colour );
 
     // TODO:text color alternation...
@@ -795,6 +859,7 @@ Dialogue.fn = Dialogue.prototype = {
   },
 
   /*
+  * Dialogue.draw_speech_bubble
   * draw a speech bubble large enough to fit a given message.
   * TODO:account for word wrap.
   *
@@ -815,7 +880,13 @@ Dialogue.fn = Dialogue.prototype = {
 
     ctx.save();
 
-    ctx.globalAlpha = 0.2;
+    ctx.globalAlpha = 0.8;
+    ctx.fillStyle = 'white';
+    ctx.fillRect( x - padding, 
+        y - bubble_height/2, 
+        bubble_width, bubble_height );
+
+    ctx.globalAlpha = 0.1;
     ctx.fillStyle = colour;
     ctx.fillRect( x - padding, 
         y - bubble_height/2, 
