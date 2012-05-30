@@ -403,7 +403,9 @@ Strip.fn = Strip.prototype = {
     newScene: function( image, lines ) {
       debug("Strip.newScene()");
       var scene = new Scene.fn.init(),
-        strip = this;
+        strip = this,
+        image = image,
+        lines = lines;
 
       image && scene.setShot(     strip.newShot(     image ) );
       lines && scene.setDialogue( strip.newDialogue( lines ) ); 
@@ -418,7 +420,9 @@ Strip.fn = Strip.prototype = {
     */
     addNewScene: function( image, lines ) { 
       var scene,
-        strip = this; 
+        strip = this,
+        image = image,
+        lines = lines; 
       scene = strip.newScene( image, lines );
       strip.sequence = strip.sequence || strip.newSequence();
       strip.sequence.pushScene( scene );
@@ -711,10 +715,11 @@ Shot.fn = Shot.prototype = {
 Dialogue.fn = Dialogue.prototype = { 
   constructor: Dialogue, 
   init: function() { 
+    this.texts = [];
     return this;
   },
 
-  texts: [],
+  texts: null,
 
   /* the currently selected text index. */
   selected_index: 0, 
@@ -821,10 +826,14 @@ Dialogue.fn = Dialogue.prototype = {
   },
 
   /**
+  * Dialogue.addLines
   * add a list of speech lines (strings) to our dialogue.
+  *
+  * @param lines - string array 
   */
   addLines: function( lines ) {
     var i = 0, 
+      lines = lines,
       len = lines && lines.length,
       dialogue = this;
 
@@ -836,7 +845,10 @@ Dialogue.fn = Dialogue.prototype = {
   },
 
   /**
+  * Dialogue.addLine
   * add a single speech line (string) to our dialogue.
+  *
+  * @param msg - string
   */
   addLine: function( msg ) {
     if ( !msg ) {
@@ -853,9 +865,7 @@ Dialogue.fn = Dialogue.prototype = {
   */
   pushText: function( text ) {
     debug("pushText, text:"+text);
-    var texts = this.texts || []; 
-    texts.push( text );
-    this.texts = texts;
+    this.texts.push( text );
     return this;
   }
 }; 
