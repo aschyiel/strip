@@ -1,1 +1,9 @@
-the "next" button gets darker and darker as it gets redrawn ( needs to be cleared ).
+
+BUGS:
+    next/prev/next on last scene's narrative will get stuck...
+
+
+
+FIXED:
+    the "next" button gets darker and darker as it gets redrawn ( needs to be cleared ).
+

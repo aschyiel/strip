@@ -18,7 +18,10 @@ figure out word-wrap for speech-bubbles.
 
 rename "new" to "create", ie. Strip.createShot instead of Strip.newShot
 
-TODO: more model creation helpers...
+TODO: 
+    more model creation helpers...
+    width for speech bubble
+    
 
 Game Design:
     "real-time" turn-based strategy game (update physics/ai only while user inputs).
