@@ -849,6 +849,7 @@ Dialogue.fn = Dialogue.prototype = {
     x = this.get_x();
     y = this.get_y();
     this.draw_speech_bubble( context, words, x, y, colour );
+    this.draw_words(         context, words, x, y, colour );
 
     // TODO:text color alternation...
     // TODO:probably need to loop through and 
@@ -857,6 +858,38 @@ Dialogue.fn = Dialogue.prototype = {
     context.fillText( words, x, y );
     return this;
   },
+
+  /*
+  * Dialogue.draw_words
+  *
+  * @param ctx - the canvas 2d drawing context.
+  * @param s - (String) the words to draw.
+  * @param x - the top left x coordinate of where to draw words.
+  * @param y - the top left y coordinate of where to draw words.
+  * @param colour - (String) the fillStyle to use.
+  */
+  draw_words: function( ctx, s, x, y, colour ) {
+    var lines = [],
+      words = s.split(' '),
+      len, 
+      i = 0,
+      word,
+      metrix,
+      line_length = 0,
+      max_width = 300;  // TODO! get canvas width
+    
+    len = words.length;
+    for ( ; i < len; i++ ) {
+      word = words[ i ]; 
+      metrix = ctx.measureText( word ); 
+
+      if ( metrix.width + line_length < max_width ) {
+        line.push( word );
+      }
+    }
+
+    return this;
+  }, 
 
   /*
   * Dialogue.draw_speech_bubble
