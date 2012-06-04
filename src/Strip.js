@@ -870,23 +870,38 @@ Dialogue.fn = Dialogue.prototype = {
   */
   draw_words: function( ctx, s, x, y, colour ) {
     var lines = [],
+      line,
       words = s.split(' '),
       len, 
       i = 0,
       word,
       metrix,
+      line_height = 12,
       line_length = 0,
-      max_width = 300;  // TODO! get canvas width
-    
+      line_idx = 0,
+      max_width = 100;  // TODO! get canvas width
+   
+    lines[0] = line = [];
     len = words.length;
     for ( ; i < len; i++ ) {
       word = words[ i ]; 
       metrix = ctx.measureText( word ); 
 
-      if ( metrix.width + line_length < max_width ) {
-        line.push( word );
-      }
+      if ( metrix.width + line_length > max_width ) {
+        line_length = 0;
+        lines[ ++line_idx ] = line = [];
+      } 
+      line_length += metrix.width;
+      line.push( word );
     }
+
+    for ( i = 0, len = lines.length; i < len; i++ ) {
+      ctx.fillText( lines[ i ].join(' '), 
+        x, 
+        y + ( i * line_height ) );
+    }
+
+    window.lines = lines; // TODO
 
     return this;
   }, 
