@@ -323,9 +323,11 @@ Strip.fn = Strip.prototype = {
       var ctx = this.ctx,
         h = this.canvas.height,
         w = this.canvas.width;
+      ctx.save();
       ctx.clearRect( 0, 0, w, h );
       ctx.fillStyle = '#808080';
       ctx.fillRect( 0, 0, w, h );
+      ctx.restore();
       return this;
     },
 
@@ -703,6 +705,9 @@ Scene.fn = Scene.prototype = {
     return this; 
   },
 
+  /*
+  * Scene.setup
+  */
   setup: function( ctx ) {
     debug( "scene.setup, ctx:"+ctx );
     this.ctx = ctx;
@@ -710,10 +715,10 @@ Scene.fn = Scene.prototype = {
       warn( "missing shot" );
     }
     this.shot && this.shot.draw( ctx ); 
-    if ( !this.dialogue ) {
-      warn( "missing dialogue" );
+    if ( this.dialogue ) {
+      this.dialogue.selected_index = 0;
+      this.dialogue.draw( ctx );  
     }
-    this.dialogue && this.dialogue.draw( ctx );  
 
     return this;
   },
@@ -763,8 +768,7 @@ Dialogue.fn = Dialogue.prototype = {
   init: function() { 
     this.texts = [];
     this.selected_index = 0;
-    this.prev_x = 16;
-    this.prev_y = 32;
+    this.reset();
     return this;
   },
 
@@ -774,8 +778,8 @@ Dialogue.fn = Dialogue.prototype = {
   */
   reset: function() {
     debug( "Dialogue.reset" );
-    this.prev_x = 16;
-    this.prev_y = 32; 
+    this.prev_x = 0;
+    this.prev_y = 0; 
   },
 
   prev_x: null,
@@ -790,7 +794,7 @@ Dialogue.fn = Dialogue.prototype = {
   // TODO:allow different word-bubble strategies...
   //
   get_x: function() { 
-    return this.prev_x += 16;  // TODO:alternative left and right.
+    return this.prev_x += 32;  // TODO:alternative left and right.
   },
 
   get_y: function() {
@@ -814,14 +818,17 @@ Dialogue.fn = Dialogue.prototype = {
       x, 
       y,
       get_x, 
-      get_y;
+      get_y,
+      number_of_lines,
+      max_width = 150;
   
     words = text.message; 
 
     get_fill_style = function() {
       switch ( i ) {
         case 0:
-          colour = 'black';
+//        colour = 'black';
+          colour = 'blue';
           break;
         case 1:
           colour = 'red';
@@ -845,17 +852,23 @@ Dialogue.fn = Dialogue.prototype = {
     }
 
     colour = get_fill_style(); // TODO:set larger font size
+    debug( "colour"+colour );
 
     x = this.get_x();
-    y = this.get_y();
-    this.draw_speech_bubble( context, words, x, y, colour );
-    this.draw_words(         context, words, x, y, colour );
+    y = this.get_y(); 
+    
+    var _canvas = document.createElement('canvas');
+    // TODO
+    _canvas.height = 350;
+    _canvas.width =  500;
+    var _ctx = _canvas.getContext('2d')
 
-    // TODO:text color alternation...
-    // TODO:probably need to loop through and 
-    // re-draw all the words from previous texts.
-    context.fillStyle = colour;
-    context.fillText( words, x, y );
+    number_of_lines = this.draw_words( _ctx, words, 
+                                       x, y, colour, max_width );
+    this.draw_speech_bubble( context, x, y, 
+                             colour, number_of_lines, max_width );  
+    context.drawImage( _canvas, 0, 0 );
+
     return this;
   },
 
@@ -867,8 +880,10 @@ Dialogue.fn = Dialogue.prototype = {
   * @param x - the top left x coordinate of where to draw words.
   * @param y - the top left y coordinate of where to draw words.
   * @param colour - (String) the fillStyle to use.
+  *
+  * @return (int) number of lines.
   */
-  draw_words: function( ctx, s, x, y, colour ) {
+  draw_words: function( ctx, s, x, y, colour, max_width ) {
     var lines = [],
       line,
       words = s.split(' '),
@@ -878,9 +893,11 @@ Dialogue.fn = Dialogue.prototype = {
       metrix,
       line_height = 12,
       line_length = 0,
-      line_idx = 0,
-      max_width = 100;  // TODO! get canvas width
-   
+      line_idx = 0;
+
+    ctx.save();
+    ctx.globalAlpha = 1.0;
+
     lines[0] = line = [];
     len = words.length;
     for ( ; i < len; i++ ) {
@@ -903,7 +920,8 @@ Dialogue.fn = Dialogue.prototype = {
 
     window.lines = lines; // TODO
 
-    return this;
+    ctx.restore();
+    return lines.length;
   }, 
 
   /*
@@ -916,31 +934,38 @@ Dialogue.fn = Dialogue.prototype = {
   * @param x - number
   * @param y - number
   */
-  draw_speech_bubble: function( ctx, s, x, y, colour ) {
-    debug("draw_speech_bubble");
-    var bubble_width,
-      bubble_height,
-      padding = 16,
-      text_metrics = ctx.measureText( s ); 
+  draw_speech_bubble: function( ctx, x, y, colour, number_of_lines, max_width ) {
+    debug("draw_speech_bubble, colour:"+colour);
+    debug( "ctx.fillStyle:"+ctx.fillStyle );
 
-    bubble_width =  ~~(text_metrics.width + padding + 1);
-    bubble_height = 32; // TODO:more thorough text height measuring!
+    var padding = 4;  // TODO: parameterize
 
+    var bubble_width = ~~(1 + padding + max_width),
+      bubble_height = number_of_lines * 12; // TODO: text height
     ctx.save();
 
     ctx.globalAlpha = 0.8;
     ctx.fillStyle = 'white';
+
+    debug( "x - padding:"+ ( x - padding ) );
+    debug( "y - bubble_height/2:"+ ( y - bubble_height/2 ) );
+    debug( "bubble_width:"+ ( bubble_width ) );
+    debug( "bubble_height:"+ ( bubble_height ) );
+
     ctx.fillRect( x - padding, 
         y - bubble_height/2, 
         bubble_width, bubble_height );
 
-    ctx.globalAlpha = 0.1;
-    ctx.fillStyle = colour;
-    ctx.fillRect( x - padding, 
-        y - bubble_height/2, 
-        bubble_width, bubble_height );
+//  ctx.globalAlpha = 0.2;
+//  ctx.fillStyle = colour;
+//  ctx.fillRect( x - padding, 
+//      y - bubble_height/2, 
+//      bubble_width, bubble_height );
 
+    ctx.globalAlpha = 1;  // TODO assume this is the defualt?
+    debug( "pre restore ctx.fillStyle:"+ctx.fillStyle );
     ctx.restore();
+    debug( "post restore ctx.fillStyle:"+ctx.fillStyle );
     return this;
   },
 
