@@ -936,36 +936,22 @@ Dialogue.fn = Dialogue.prototype = {
   */
   draw_speech_bubble: function( ctx, x, y, colour, number_of_lines, max_width ) {
     debug("draw_speech_bubble, colour:"+colour);
-    debug( "ctx.fillStyle:"+ctx.fillStyle );
 
-    var padding = 4;  // TODO: parameterize
+    var padding = 12;  // TODO: parameterize based on fontSize.
 
-    var bubble_width = ~~(1 + padding + max_width),
-      bubble_height = number_of_lines * 12; // TODO: text height
+    var bubble_width = ~~(1 + 2*padding + max_width),
+      bubble_height = number_of_lines * 12 + padding; // TODO: text height
     ctx.save();
 
-    ctx.globalAlpha = 0.8;
-    ctx.fillStyle = 'white';
-
-    debug( "x - padding:"+ ( x - padding ) );
-    debug( "y - bubble_height/2:"+ ( y - bubble_height/2 ) );
-    debug( "bubble_width:"+ ( bubble_width ) );
-    debug( "bubble_height:"+ ( bubble_height ) );
+    ctx.globalAlpha = 0.9;
+    ctx.fillStyle = 'white'; 
 
     ctx.fillRect( x - padding, 
-        y - bubble_height/2, 
-        bubble_width, bubble_height );
-
-//  ctx.globalAlpha = 0.2;
-//  ctx.fillStyle = colour;
-//  ctx.fillRect( x - padding, 
-//      y - bubble_height/2, 
-//      bubble_width, bubble_height );
+        y - padding, 
+        bubble_width, bubble_height ); 
 
     ctx.globalAlpha = 1;  // TODO assume this is the defualt?
-    debug( "pre restore ctx.fillStyle:"+ctx.fillStyle );
     ctx.restore();
-    debug( "post restore ctx.fillStyle:"+ctx.fillStyle );
     return this;
   },
 
