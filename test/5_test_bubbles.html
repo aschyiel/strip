@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>test#5, speech bubble test</title>
+<script src="../lib/jquery.js"></script>
+<script src="../src/Strip.js"></script>
+<script type="text/javascript"> 
+
+$(document).ready(function(){ doit(); });
+
+var doit = function() { 
+  debug( "..doit.." ); 
+
+  var fileName, 
+    image, 
+    fileNames = [ "bubble_1.png", "bubble_2.png", "bubble_3.png" ],
+    loadStatus,
+    resources = {},
+    initialized = false,
+    images = [];
+
+  //
+  // setup our empty images.
+  //
+  $.each(fileNames, function(idx, fileName){
+    image = new Image(); 
+    resources[fileName] = image;
+    images.push(image);
+    image.src = "media/5.d/"+fileName;
+  });
+
+  window.resources = resources; 
+
+  setup_strip( resources ); 
+} 
+
+var debug = function( msg ) {
+  console.log(msg);
+}
+
+/*
+* @param images Array of images ready to be drawn.
+*/
+var setup_strip = function( resources ) { 
+  debug( "..setup_strip.." ); 
+
+  var strip = new Strip(),
+    canvas = $('#stage')[0]; 
+
+  strip.setCanvas( canvas );
+  window.strip = strip;
+  window.canvas = canvas;
+
+  var lines1, lines2, lines3;
+  
+  lines1 = [ "Do you believe in time travel?" ];
+  lines2 = [ "It was so exciting to finally meet you in person.", 
+         "We should try to do that more often..." ];
+  lines3 = [ "If only", 
+         "You could see my smile",
+         "Under this stupid bunny suite." ];
+
+  strip.addNewScene( resources['bubble_1.png'], lines1 ); 
+  strip.addNewScene( resources['bubble_2.png'], lines2 ); 
+  strip.addNewScene( resources['bubble_3.png'], lines3 ); 
+
+  strip.action(); 
+} 
+
+</script>
+</head>
+<body>
+  <div style="position: absolute; top: 50px; left:50px">
+    <canvas id="stage" width="300" height="200">html5 canvas isn't!</canvas>
+  </div>
+</body>
+</html>
