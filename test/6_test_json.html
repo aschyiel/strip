@@ -1,0 +1,97 @@
+<!doctype html>
+<!---
+*
+* test #6,
+* this test shows off our json integration needed for talking to rails.
+*
+* 1. load our comic-strip configuration from json.
+* 2. verify strip functionality.
+* 3. output json
+* 4. the original input and generated output json should be the same.
+*
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>test#6, json test</title>
+<script src="../lib/jquery.js"></script>
+<script src="../src/Strip.js"></script>
+<script type="text/javascript"> 
+
+$(document).ready(function(){ doit(); });
+
+var doit = function() { 
+  debug( "..doit.." ); 
+
+  var json_input = generate_json_input(); 
+  debug( "json_input:"+json_input );
+  window.json_input = json_input;
+
+  var strip = new Strip();
+  window.strip = strip;
+  assert( strip );
+  var canvas = $('#stage')[0]; 
+  assert( canvas ); 
+  strip.setCanvas( canvas );
+
+  strip.load_from_json( json_input ).action();
+
+  var json_output = strip.to_json();
+  debug( "json_output:"+json_output );
+  window.json_output = json_output;
+
+  assert( JSON.stringify(json_input) === strip.to_json_string() ); 
+} 
+
+var debug = function( msg ) {
+  console.log(msg);
+}
+
+var assert = function( expression, message ) {
+  if ( !expression ) {
+    throw new Exception(message);
+  }
+}
+
+/*
+* assemble our comic-strip json input configuration.
+* @return strip content as json object.
+*/
+var generate_json_input = function() {
+  debug( "..generate_json_input.." ); 
+
+  return {
+    "title": "test #5 title",
+    "scenes":[
+      { 
+        "image": "http://data.whicdn.com/images/28004661/28314-my-little-pony-ponies-cartoon-cartoons_thumb.jpg",
+        "lines": [ { "text": "scene1: this is a sentence." } ] 
+      },
+      { 
+        "image": "http://data.whicdn.com/images/22406409/1307359906084_0_large.gif",
+        "lines": [ 
+          { "text": "scene2: this is the first sentence." }, 
+          { "text": "scene2: this is the second sentence" } 
+        ] 
+      },
+      { 
+        "image": "http://static.fjcdn.com/pictures/MLP_71e96f_2216427.jpg",
+        "lines": [ 
+          { "text": "scene3: this is the first sentence." }, 
+          { "text": "scene3: this is the second sentence." }, 
+          { "text": "scene3: this is the third sentence." } 
+        ] 
+      }
+    ]
+  
+  };
+} 
+
+</script>
+</head>
+<body>
+  <div style="position: absolute; top: 50px; left:50px">
+    <canvas id="stage" width="666" height="555">html5 canvas isn't!</canvas>
+  </div>
+</body>
+</html>
