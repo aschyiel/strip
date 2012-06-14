@@ -65,6 +65,8 @@ Strip.fn = Strip.prototype = {
         image, 
         lines;
       strip.title = data.title;
+      strip.sequence = strip.newSequence();    
+
       $.each( data.scenes, function( idx, scene ) {
         image = new Image();
         image.src = scene.image;
@@ -547,8 +549,19 @@ Sequence.fn = Sequence.prototype = {
 
   constructor: Sequence,
 
-  init: function() { 
-    return this;
+  /** Sequence.fn.init */ 
+  init: function( previous_sequence ) { 
+    var seq = this;
+    seq.scenes = [];
+    seq.selected_scene_index = 0;
+    if ( previous_sequence ) {
+      seq.ctx =    previous_sequence.ctx;
+      seq.canvas = previous_sequence.canvas;
+    } else {
+      seq.ctx = null;
+      seq.canvas = null;
+    }
+    return seq;
   },
 
   selected_scene_index: 0, 
