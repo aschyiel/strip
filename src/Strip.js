@@ -1,13 +1,18 @@
 /*!
 * ..Strip.js, uly may2012..
 *
-* organized like jQuery v1.7.2
+* organized in a similar fashion to jQuery v1.7.2
 *
 * most of the Strip methods are intended to work with the "cascading-jsp-style".
 *
 */
 (function( window, undefined ){ 
 
+//---------------------------------------------------------------------------
+//
+// (internal) utilities
+//
+//---------------------------------------------------------------------------
 var warn = function( msg ) {
   try {
     console.warn( "DEBUG::"+msg );
@@ -25,6 +30,20 @@ var debug = function( msg ) {
     //..
   } 
 };
+
+var assert = function( expression, msg ) {
+  if ( !expression ) {
+    msg && warn( msg );
+    throw new Exception( msg );
+  }
+  try {
+    console.log( "DEBUG::"+msg );
+  }
+  catch ( e ) {
+    //..
+  } 
+};
+//---------------------------------------------------------------------------
 
 var Strip = (function() {
   debug("Strip..");
@@ -165,7 +184,6 @@ Strip.fn = Strip.prototype = {
         i = 0,
         len = images.length;
       debug( "len:"+len );
-//    $.each(images, function(idx, image) {
       for ( ; i<len; i++ ) {
         image = images[i];
         debug( "image:"+image );
@@ -174,29 +192,33 @@ Strip.fn = Strip.prototype = {
         shot =  new Shot.fn.init();
         window.image3 = image;
         shot = shot.setImage( image );
-        //scene.setShot( shot.setImage( image ) );
         scene.setShot( shot );
         sequence.pushScene( scene );
-//    });
       }
       this.loadSequence( sequence );
       return this;
     },
 
     /*
+    * Strip.fn.draw_buttons
     * draw the previous/next buttons for the strip.
     * @param ctx - the 2d drawing context.
     */
     draw_buttons: function( ctx ) { 
-      var h = this.canvas.height,
+      assert(ctx);
+      var strip = this,
+        h = this.canvas.height,
         w = this.canvas.width,
         bh = this.button_height,
         bw = this.button_width;
 
-      var next_x = 0,
-        next_y = h - bh,
-        prev_x = w - bw,
+      var has_next = strip.sequence.selected_scene_index !== strip.sequence.END_SCENE_INDEX,
+        has_prev = strip.sequence.selected_scene_index !== strip.sequence.TITLE_SCENE_INDEX;
+
+      var prev_x = 0,
         prev_y = h - bh,
+        next_x = w - bw,
+        next_y = h - bh,
         mid_bh = bh / 2,
         mid_bw = bw / 2,
         guess = 20;
@@ -204,20 +226,17 @@ Strip.fn = Strip.prototype = {
       ctx.save();
 
       ctx.globalAlpha = 0.2;
-      ctx.fillStyle = '#0000aa';
-      ctx.fillRect( next_x, next_y, bw, bh );
-      ctx.fillRect( prev_x, prev_y, bw, bh );
+      ctx.fillStyle = '#0000aa'; 
+      has_next && ctx.fillRect( next_x, next_y, bw, bh );
+      has_prev && ctx.fillRect( prev_x, prev_y, bw, bh );
 
-      ctx.globalAlpha = 1;
-//    ctx.fillText( 'next -->', prev_x + mid_bw, prev_y + mid_bh );
-//    ctx.fillText( '<-- prev', next_x + mid_bw, next_y + mid_bh );
-
-      ctx.fillText( 'next -->', 
-        prev_x + mid_bw - guess, 
-        prev_y + mid_bh );
-      ctx.fillText( '<-- prev', 
-        next_x + mid_bw - guess , 
-        next_y + mid_bh );
+      ctx.globalAlpha = 1; 
+      has_prev && ctx.fillText( '<-- prev',
+          prev_x + mid_bw - guess, 
+          prev_y + mid_bh );
+      has_next && ctx.fillText( 'next -->', 
+          next_x + mid_bw - guess , 
+          next_y + mid_bh );
       ctx.restore(); 
     },
 
@@ -383,18 +402,28 @@ Strip.fn = Strip.prototype = {
     }, 
 
     /**
-    * Strip.action
+    * Strip.fn.action
     * synonymous with "start".
     */
     action: function() {
-      debug("strip.action");
-      if ( !this.sequence ) {
+      var strip = this,
+        seq = this.sequence;
+      if ( !seq ) {
         debug( "sequence is null!" );
       }
-      this.clear_canvas();
-      this.sequence.setContext(this.ctx).action();
-      this.draw_buttons(this.ctx);
-      return this;
+      // TODO use multiple canvases to separate out the different layers.
+      strip.clear_canvas();
+      if ( seq ) {
+        if ( seq.TITLE_SCENE_INDEX === seq.selected_scene_index ) {
+          strip.show_title();
+        } else if ( seq.END_SCENE_INDEX === seq.selected_scene_index ) { 
+          strip.show_fin();
+        } else {
+          seq.setContext(strip.ctx).action();
+        }
+      }
+      strip.draw_buttons(strip.ctx);
+      return strip;
     },
 
     /**
@@ -419,21 +448,24 @@ Strip.fn = Strip.prototype = {
     },
 
     /* 
-    * Strip.next
+    * Strip.fn.next
     * go to the next scene.
     */
     next: function() { 
-      var sequence = this.sequence;
+      var sequence = this.sequence,
+        strip = this;
       if ( sequence.is_at_end_of_current_scene() ) {
         if ( sequence.has_next_scene() ) {
-          this.change_scenes(true);
+          strip.change_scenes(true);
         } else {
-          warn( "at end of strip's sequence. TODO show fin" );
+          sequence.selected_scene_index = sequence.END_SCENE_INDEX;
+          strip.show_fin(); // TODO call action?
+          strip.draw_buttons(strip.ctx);
         }
       } else {
         sequence.move_dialogue_forward();
       }
-      return this; 
+      return strip; 
     },
 
     /* 
@@ -441,13 +473,7 @@ Strip.fn = Strip.prototype = {
     * go to the previous scene.
     */ 
     previous: function() { 
-      var sequence = this.sequence;
-//    if ( sequence.is_at_beginning_of_current_scene() ) {
-//      this.change_scenes(false);
-//    } else {
-//      sequence.move_dialogue_backward();
-//    }
-  
+      var sequence = this.sequence; 
       this.change_scenes(false);
       return this;
     },
@@ -460,31 +486,46 @@ Strip.fn = Strip.prototype = {
     *               otherwise it will go backwards.
     */
     change_scenes: function( next ) {
-      console.log("strip.change_scenes, next:"+next);
       next = ( typeof next !== 'undefined' )? next : true;
 
       var strip = this,
         sequence = this.sequence,
-        scene_incrementor = (next)? 1 : -1;
+        scene_incrementor = (next)? 1 : -1,
+        idx = this.sequence.selected_scene_index;
+      debug( "change_scenes, scene index was:"+idx );
 
-      // TODO:should all of this logic to live under sequence?
-      sequence.current_scene_index += scene_incrementor;
+      if ( idx !== sequence.END_SCENE_INDEX
+          && idx !== sequence.TITLE_SCENE_INDEX ) {
+        sequence.selected_scene_index += scene_incrementor;
+      } else if ( !next && idx === sequence.END_SCENE_INDEX ) { 
+        sequence.selected_scene_index = sequence.number_of_scenes - 1; 
+      } else if ( next && idx === sequence.TITLE_SCENE_INDEX ) {
+        sequence.selected_scene_index = 0;
+      }
 
-      // catch falling off edges
-      if ( sequence.current_scene_index > sequence.number_of_scenes - 1 ) {
-        sequence.current_scene_index = sequence.number_of_scenes - 1;
-      } else if ( sequence.current_scene_index < 0 ) { 
-        sequence.current_scene_index = 0;
+      idx = sequence.selected_scene_index;
+      // catch falling off edges beyond title/fin.
+      if ( idx > sequence.number_of_scenes ) {
+        sequence.selected_scene_index = sequence.END_SCENE_INDEX; 
+      } else if ( idx.selected_scene_index < 0 
+        && idx !== sequence.END_SCENE_INDEX ) { 
+        sequence.selected_scene_index = sequence.TITLE_SCENE_INDEX;
       } 
 
-      // TODO call action instead!
-      strip.clear_canvas();
-      sequence.load_current_scene(); 
-      strip.draw_buttons(strip.ctx);
-      return this; 
+      idx = sequence.selected_scene_index;
+      if ( idx > -1 
+          && idx < sequence.number_of_scenes - 1 ) {
+        sequence.load_current_scene( strip.ctx );
+      }
+
+      debug( "change_scenes, scene index is now:"+idx );
+      return strip.action(); 
     },
 
+    /** Strip.fn.newSequence */
     newSequence: function() {
+      var strip = this;
+      strip.show_title();
       debug("Strip.newSequence");
       return new Sequence.fn.init();
     },
@@ -536,6 +577,52 @@ Strip.fn = Strip.prototype = {
     newText: function(msg) {
       debug("strip.newText");
       return ( new Text.fn.init() ).setMessage(msg);
+    },
+
+    /**
+    * Strip.fn.show_title
+    * show the beginning title "scene".
+    */
+    show_title: function() {
+      var strip = this,
+        title = this.title || 'untitled';
+      strip.draw_black_and_white_text( title );
+      return strip; 
+    },
+
+    /**
+    * Strip.fn.show_fin
+    * show the ending "scene".
+    */ 
+    show_fin: function() {
+      var strip = this;
+      strip.draw_black_and_white_text( 'fin' );
+      return strip;
+    },
+
+    /* 
+    * @private 
+    * Strip.fn.draw_black_and_white_text
+    *
+    */
+    draw_black_and_white_text: function( label ) {
+      var strip = this,
+        ctx = this.ctx 
+        h = this.canvas.height,
+        w = this.canvas.width;
+
+      // TODO center the text.
+      var x = w / 2,
+        y = h / 2;
+      ctx.save();
+      ctx.fillStyle = '#000000';
+      ctx.fillRect( 0, 0, w, h );
+      ctx.fillStyle = '#ffffff';
+      ctx.font = "italic 24pt Calibri";
+      ctx.textAlign = 'center';
+      ctx.fillText( label, x, y );  // TODO use dialogue's word wrap
+      ctx.restore();
+      return strip; 
     }
 
   };
@@ -553,7 +640,7 @@ Sequence.fn = Sequence.prototype = {
   init: function( previous_sequence ) { 
     var seq = this;
     seq.scenes = [];
-    seq.selected_scene_index = 0;
+    seq.selected_scene_index = seq.TITLE_SCENE_INDEX;
     if ( previous_sequence ) {
       seq.ctx =    previous_sequence.ctx;
       seq.canvas = previous_sequence.canvas;
@@ -564,38 +651,28 @@ Sequence.fn = Sequence.prototype = {
     return seq;
   },
 
-  selected_scene_index: 0, 
-
-  canvas: null,
-
-  // the drawing context.
-  ctx: null,  
-
-  current_scene_index: -1, 
-
+  TITLE_SCENE_INDEX: -1,
+  END_SCENE_INDEX:   -2, 
+  selected_scene_index: null, 
+  canvas: null, 
+  ctx: null,  // the drawing context.  
   scenes: [],
 
+  /** Sequence.fn.action */
   action: function() {
     debug("sequence, action");
-    if ( this.current_scene_index < 0 ) {
-      this.current_scene_index = 0;
-    }
     this.load_current_scene();
     return this;
   },
 
   /**
   * return the sequence's currently selected scene.
-  * @return Scene.
+  * @return Scene - may be null.
   */
   get_current_scene: function() {
     var scene,
-      idx = this.current_scene_index;
-
-    debug( "Sequence.get_current_scene.idx:"+idx );
+      idx = this.selected_scene_index; 
     scene = this.scenes[ idx ]; 
-    debug( "Sequence.get_current_scene.scene:"+scene );
-
     return scene;
   },
 
@@ -608,9 +685,9 @@ Sequence.fn = Sequence.prototype = {
   */
   has_next_scene: function() {
     var seq = this,
-      idx = this.current_scene_index,
+      idx = this.selected_scene_index,
       len = this.scenes.length;
-    return idx < (len - 1);
+    return ( idx < (len - 1) ) && idx !== seq.END_SCENE_INDEX;
   },
 
   /**
@@ -620,8 +697,9 @@ Sequence.fn = Sequence.prototype = {
   * @return boolean
   */ 
   is_at_end_of_current_scene: function() {
-    var seq = this;
-    return seq.get_current_scene().is_at_end(); 
+    var seq = this,
+      scene = this.get_current_scene();
+    return ( scene )? scene.is_at_end() : true; 
   },
 
   /**
@@ -630,50 +708,43 @@ Sequence.fn = Sequence.prototype = {
   * @return boolean
   */ 
   is_at_beginning_of_current_scene: function() {
-    var seq = this;
-    return seq.get_current_scene().is_at_beginning();
+    var seq = this,
+      scene = this.get_current_scene();
+    return ( scene )? scene.is_at_beginning() : true; 
   },
 
+  /* 
+  * @private 
+  * Sequence.fn.move_dialogue_forward
+  * @return boolean 
+  */
   move_dialogue_forward: function() {
-    debug("Sequence.move_dialogue_forward");
-    var seq = this;
-    return seq.get_current_scene().move_dialogue_forward();
+    var seq = this,
+      scene = this.get_current_scene();
+    return scene && scene.move_dialogue_forward();
   },
 
+  /* 
+  * @private 
+  * Sequence.fn.move_dialogue_backward
+  * @return boolean 
+  */ 
   move_dialogue_backward: function() {
-    var seq = this;
-    return seq.get_current_scene().move_dialogue_backward();
+    var seq = this,
+      scene = this.get_current_scene();
+    return scene && scene.move_dialogue_backward(); 
   },
 
   /*
-  * Sequence.load_current_scene
+  * Sequence.fn.load_current_scene
   * load the currently selected scene by index.
   */
-  load_current_scene: function() {
-    debug("sequence.load_current_scene");
+  load_current_scene: function( ctx ) {
     var scene = this.get_current_scene(),
-      ctx = this.ctx; 
+      ctx = ctx || this.ctx; 
+    assert( ctx );
     scene.dialogue && scene.dialogue.reset();
-    scene.setup( ctx );
-
-    return this;
-  },
-
-  // load/setup a scene.
-  loadScene: function( scene ) { 
-    var i = 0, 
-      len = this.scenes.length, 
-      scenes = this.scenes,
-      selected_scene_index = -1;
-
-    for ( ;i < len; i++ ) {
-      if ( scene === scenes[i] ) {  // TODO does this work?  
-        selected_scene_index = i; 
-      }
-    }
-
-    scene.setup( this.ctx );
-
+    scene.setup( ctx ); 
     return this;
   },
 
@@ -798,10 +869,12 @@ Scene.fn = Scene.prototype = {
   },
 
   /*
-  * Scene.setup
+  * @protected
+  * Scene.fn.setup
   */
   setup: function( ctx ) {
     debug( "scene.setup, ctx:"+ctx );
+    assert( ctx );
     this.ctx = ctx;
     if ( !this.shot ) {
       warn( "missing shot" );
@@ -902,6 +975,7 @@ Dialogue.fn = Dialogue.prototype = {
   //
   draw: function( context, width, height ) {
     debug("dialogue.draw");
+    assert( context );
     var text = this.texts[this.selected_index], 
       words,
       i = 0,
@@ -966,6 +1040,7 @@ Dialogue.fn = Dialogue.prototype = {
 
   /*
   * Dialogue.draw_words
+  * draws words on to the canvas and does text wrapping!
   *
   * @param ctx - the canvas 2d drawing context.
   * @param s - (String) the words to draw.

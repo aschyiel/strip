@@ -1,0 +1,79 @@
+<!doctype html>
+<!---
+*
+* test #7,
+* this tests demonstrates our beginning title scene, and our "fin" ending scene.
+*
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>test#7, title test</title>
+<script src="../lib/jquery.js"></script>
+<script src="../src/Strip.js"></script>
+<script type="text/javascript"> 
+
+$(document).ready(function(){ doit(); });
+
+var doit = function() { 
+  debug( "..doit.." ); 
+
+  var json_input = generate_json_input(); 
+  debug( "json_input:"+json_input );
+  window.json_input = json_input;
+
+  var strip = new Strip();
+  window.strip = strip;
+  var canvas = $('#stage')[0]; 
+  strip.setCanvas( canvas );
+
+  strip.load_from_json( json_input ).action(); 
+
+} 
+
+var debug = function( msg ) {
+  console.log(msg);
+} 
+
+/*
+* assemble our comic-strip json input configuration.
+* @return strip content as json object.
+*/
+var generate_json_input = function() {
+  debug( "..generate_json_input.." ); 
+
+  return {
+    "title": "test #7 title",
+    "scenes":[
+      { 
+        "image": "http://data.whicdn.com/images/28004661/28314-my-little-pony-ponies-cartoon-cartoons_thumb.jpg",
+        "lines": [ { "text": "scene1: this is a sentence." } ] 
+      },
+      { 
+        "image": "http://data.whicdn.com/images/22406409/1307359906084_0_large.gif",
+        "lines": [ 
+          { "text": "scene2: this is the first sentence." }, 
+          { "text": "scene2: this is the second sentence" } 
+        ] 
+      },
+      { 
+        "image": "http://static.fjcdn.com/pictures/MLP_71e96f_2216427.jpg",
+        "lines": [ 
+          { "text": "scene3: this is the first sentence." }, 
+          { "text": "scene3: this is the second sentence." }, 
+          { "text": "scene3: this is the third sentence." } 
+        ] 
+      }
+    ]
+  
+  };
+} 
+
+</script>
+</head>
+<body>
+  <div style="position: absolute; top: 50px; left:50px">
+    <canvas id="stage" width="666" height="555">html5 canvas isn't!</canvas>
+  </div>
+</body>
+</html>
