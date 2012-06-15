@@ -49,9 +49,9 @@ var Strip = (function() {
   debug("Strip..");
 
 // "Local" copy of Strip.
-var Strip = function() {
+var Strip = function(canvas) {
     debug("Strip local init..");
-    return new Strip.fn.init();
+    return new Strip.fn.init(canvas);
   },
   Sequence = function() {},
   Shot =     function() {},
@@ -66,8 +66,15 @@ Strip.fn = Strip.prototype = {
 
     constructor: Strip,
 
-    init: function() { 
-      return this;
+    /** 
+    * Strip.fn.init 
+    * @param canvas - optional, sets the canvas/2dcontext.
+    * @return Strip
+    **/
+    init: function(canvas) { 
+      var strip = this;
+      canvas && strip.setCanvas( canvas );
+      return strip;
     },
 
     /**
@@ -606,6 +613,8 @@ Strip.fn = Strip.prototype = {
     *
     */
     draw_black_and_white_text: function( label ) {
+      assert( this.ctx );
+      assert( this.canvas ); 
       var strip = this,
         ctx = this.ctx 
         h = this.canvas.height,
