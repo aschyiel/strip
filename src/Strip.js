@@ -1,5 +1,6 @@
 /*!
 * ..Strip.js, uly may2012..
+* git src: https://github.com/aschyiel/strip
 *
 * organized in a similar fashion to jQuery v1.7.2
 *
