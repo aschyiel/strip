@@ -442,7 +442,7 @@ Strip.fn = Strip.prototype = {
         w = this.canvas.width;
       ctx.save();
       ctx.clearRect( 0, 0, w, h );
-      ctx.fillStyle = '#808080';
+      ctx.fillStyle = '#000000';
       ctx.fillRect( 0, 0, w, h );
       ctx.restore();
       return this;
