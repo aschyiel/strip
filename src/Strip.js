@@ -914,17 +914,43 @@ Shot.fn = Shot.prototype = {
   init: function() { 
     return this;
   }, 
-  draw: function( context ) {
-    var image = this.image;
+  draw: function( ctx ) {
+    var image = this.image,
+      x = 0,
+      y = 0,
+      h = ctx.canvas.height,
+      w = ctx.canvas.width;
     if ( !image ) {
       warn( "image is missing!!!" ); // TODO:blank out?
     } else {
       debug( "drawing image file:"+image.src );
     }
-    if ( !context ) {
+    if ( !ctx ) {
       warn( "context is missing!" ); 
     } 
-    context && image && context.drawImage( image, 0, 0 );  // TODO 
+    if ( ctx && image ) { 
+
+      //
+      // center the image if able.
+      //
+
+      // TODO make this a "centering" closure
+      if ( image.width < w ) {
+        x = (w/2) - (image.width/2);
+        x = ~~(1 + x);
+        assert( x > -1 );
+        assert( "number" == typeof x );
+      }
+
+      if ( image.height < h ) {
+        y = (h/2) - (image.height/2);
+        y = ~~(1 + y);
+        assert( y > -1 );
+        assert( "number" == typeof y );
+      } 
+
+      ctx.drawImage( image, x, y ); 
+    }
 
     return this;
   }, 
