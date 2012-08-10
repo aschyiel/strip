@@ -147,7 +147,8 @@ Strip.fn = Strip.prototype = {
         scenes.push( 
           { 
             "image": scene.shot.image.src.toString(),
-            "lines": lines
+            "lines": lines,
+            "music": scene.music
           }); 
       });
 
