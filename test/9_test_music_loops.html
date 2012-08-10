@@ -1,0 +1,180 @@
+<!doctype html>
+<!---
+*
+* test #9,
+* audio integration with comic strips.
+* -uly august 2012.
+*
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>test#9, strip audio tests</title>
+<script src="../lib/jquery.js"></script>
+<script src="../lib/WebAudioHelper.js"></script>
+<script src="../src/audiophile.js"></script>
+<script src="../src/strip.js"></script>
+
+<script src="../lib/qunit.js"></script> 
+
+<link rel="stylesheet" href="../lib/qunit.css" type="text/css" media="screen" />
+
+<script type="text/javascript"> 
+
+$(document).ready(function(){ main(); });
+
+var main = function() {
+  var strip;
+  strip = setup_strip(); 
+  run_tests( strip );
+}
+
+var run_tests = function( strip ) {
+
+  test( "strip can set an audio manager", function() {
+    test_set_audiophile___given_audiophile___sets_our_audio_manager( strip );
+  }); 
+  test( "audiophile can play music loops", function() {
+    test_play_loop___given_an_mp3___will_play_the_loop( strip ); 
+  });
+  test( "audiophile can clear", function() { 
+    test_clear___normally___clears_out_all_audio_clips(); 
+  });
+}
+
+//--------------------------------------------------
+//
+// individual tests.
+//
+//--------------------------------------------------
+
+var THREE_SECONDS = 3000;
+
+var test_set_audiophile___given_audiophile___sets_our_audio_manager = function( strip ) {
+  var audio_manager;
+  expect( 1 );
+  audio_manager = new Audiophile();
+  strip.set_audiophile( audio_manager );
+  equal( (audio_manager === Strip.prototype.audiophile ), true, 
+      "The Audio Manager is shared accross all instances of Strip via Strip.prototype." );
+} 
+
+var test_play_loop___given_an_mp3___will_play_the_loop = function( strip ) {
+  expect( 2 );
+  var audio_manager = new Audiophile(),
+    music_src = "../test/media/music/music.mp3"; 
+  equal( (audio_manager.clips.length === 0), true, 
+      "the audio manager's data structure should start out empty" ); 
+  audio_manager.play_loop( music_src );
+  stop();
+ 
+  setTimeout( function() { 
+    start(); 
+    equal( (audio_manager.clips.length === 1), true, 
+        "playing a loop adds an audioClip into the audio manager's data structure" );
+    audio_manager.clear();
+  }, THREE_SECONDS );
+}
+
+var test_clear___normally___clears_out_all_audio_clips = function() { 
+  expect( 3 );
+  var audio_manager = new Audiophile(),
+    music_src = "../test/media/music/music2.mp3",
+    audio_clip; 
+  equal( (audio_manager.clips.length === 0), true, 
+      "the audio manager's data structure should start out empty" ); 
+  audio_clip = audio_manager.play_loop( music_src );
+  equal( (audio_manager.clips.length === 1), true, 
+      "the audio manager's data structure should contain a single audio clip." ); 
+
+  stop();
+ 
+  setTimeout( function() { 
+    start();
+    audio_manager.clear();
+    equal( (audio_manager.clips.length === 0), true, 
+        "the audio manager's data structure should end up empty after calling clear" ); 
+    window.audio_manager_clear = audio_manager;
+    audio_clip.stop();
+  }, THREE_SECONDS );
+}
+
+//--------------------------------------------------
+//
+// setup
+//
+//--------------------------------------------------
+
+
+var setup_strip = function() { 
+  debug( "..doit.." ); 
+
+
+  var strip = new Strip();
+  window.teh_strip = strip;
+  var canvas = $('#stage')[0]; 
+  strip.setCanvas( canvas );
+
+  strip.load_from_json( get_initial_json() ).action(); 
+
+  return strip; 
+} 
+
+var debug = function( msg ) {
+  console.log(msg);
+} 
+
+var get_initial_json = function() { 
+  return {
+    "title": "test #9 audio",
+    "scenes":[
+      { 
+        "image": "http://data.whicdn.com/images/28004661/28314-my-little-pony-ponies-cartoon-cartoons_thumb.jpg",
+        "lines": [ { "text": "scene1: this is a sentence." } ],
+        "music": "media/music/music.mp3"
+      },
+      { 
+        "image": "http://data.whicdn.com/images/22406409/1307359906084_0_large.gif",
+        "lines": [ 
+          { "text": "scene2: this is the first sentence." }, 
+          { "text": "scene2: this is the second sentence" } 
+        ], 
+        "music": "media/music/music2.mp3"
+      },
+      { 
+        "image": "",
+        "lines": [ 
+          { "text": "scene3: whatever." }, 
+        ], 
+        "music": "media/music/music3.mp3"
+      },
+      { 
+        "image": "",
+        "lines": [ 
+          { "text": "scene4: blah." }, 
+        ], 
+        "music": "media/music/music4.mp3"
+      }
+
+    ]
+  
+  };
+} 
+
+</script>
+</head>
+<body>
+
+  <div>
+    <canvas id="stage" width="300" height="250">html5 canvas isn't!</canvas>
+  </div>
+
+  <h1 id="qunit-header">#9, strip audio tests.</h1>
+  <h2 id="qunit-banner"></h2>
+  <div id="qunit-testrunner-toolbar"></div>
+  <h2 id="qunit-userAgent"></h2>
+  <ol id="qunit-tests"></ol>
+  <div id="qunit-fixture">test markup, will be hidden</div> 
+
+</body>
+</html>

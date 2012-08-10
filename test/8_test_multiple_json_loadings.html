@@ -1,0 +1,79 @@
+<!doctype html>
+<!---
+*
+* test #8,
+* Strip.js should clear it's current sequence when reading in new json data...
+*
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>test#8, multiple json loading test</title>
+<script src="../lib/jquery.js"></script>
+<script src="../src/Strip.js"></script>
+<script type="text/javascript"> 
+
+$(document).ready(function(){ doit(); });
+
+var doit = function() { 
+  debug( "..doit.." ); 
+
+
+  var strip = new Strip();
+  window.strip = strip;
+  var canvas = $('#stage')[0]; 
+  strip.setCanvas( canvas );
+
+  strip.load_from_json( get_initial_json() ).action(); 
+  strip.load_from_json( get_next_json() ).action(); 
+  
+} 
+
+var debug = function( msg ) {
+  console.log(msg);
+} 
+
+var get_initial_json = function() { 
+  return {
+    "title": "test #8 first sequence",
+    "scenes":[
+      { 
+        "image": "http://data.whicdn.com/images/28004661/28314-my-little-pony-ponies-cartoon-cartoons_thumb.jpg",
+        "lines": [ { "text": "scene1: this is a sentence." } ] 
+      },
+      { 
+        "image": "http://data.whicdn.com/images/22406409/1307359906084_0_large.gif",
+        "lines": [ 
+          { "text": "scene2: this is the first sentence." }, 
+          { "text": "scene2: this is the second sentence" } 
+        ] 
+      }
+    ]
+  
+  };
+} 
+
+var get_next_json = function() { 
+  return {
+    "title": "test #8 the final sequence",
+    "scenes":[
+      { 
+        "image": "http://data.whicdn.com/images/22406409/1307359906084_0_large.gif",
+        "lines": [ 
+          { "text": "foo" }, 
+          { "text": "bar" } 
+        ] 
+      }
+    ] 
+  };
+}
+
+
+</script>
+</head>
+<body>
+  <div style="position: absolute; top: 50px; left:50px">
+    <canvas id="stage" width="666" height="555">html5 canvas isn't!</canvas>
+  </div>
+</body>
+</html>

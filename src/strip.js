@@ -90,18 +90,20 @@ Strip.fn = Strip.prototype = {
     load_from_json: function( data ) {
       var strip = this,
         image, 
-        lines;
+        lines,
+        scene;
       strip.title = data.title;
       strip.sequence = strip.newSequence();    
 
-      $.each( data.scenes, function( idx, scene ) {
+      $.each( data.scenes, function( idx, data_scene ) {
         image = new Image();
-        image.src = scene.image;
+        image.src = data_scene.image;
         lines = [];
-        $.each( scene.lines, function( idx2, line ) {
+        $.each( data_scene.lines, function( idx2, line ) {
           lines.push( line.text.toString() );
         });
-        strip.addNewScene( image, lines );
+        scene = strip.addNewScene( image, lines );
+        data_scene.music && scene.set_music( data_scene.music );
       });
       return strip;
     },
@@ -595,6 +597,7 @@ Strip.fn = Strip.prototype = {
       var strip = this,
         title = this.title || 'untitled';
       strip.draw_black_and_white_text( title );
+      Strip.prototype.audiophile && Strip.prototype.audiophile.clear();
       return strip; 
     },
 
@@ -605,6 +608,7 @@ Strip.fn = Strip.prototype = {
     show_fin: function() {
       var strip = this;
       strip.draw_black_and_white_text( 'fin' );
+      Strip.prototype.audiophile && Strip.prototype.audiophile.clear();
       return strip;
     },
 
@@ -633,6 +637,29 @@ Strip.fn = Strip.prototype = {
       ctx.fillText( label, x, y );  // TODO use dialogue's word wrap
       ctx.restore();
       return strip; 
+    },
+
+    /*
+    * Strip.set_audiophile
+    * chainable,
+    * set the audio "manager" for (all) comic strip(s).
+    * The audio manager abstracts setting, playing, looping, and transition sound bytes.
+    *
+    * An audiophile is expected to provide the following interface:
+    * play_loop( src )
+    *
+    * @return Strip (chainable)
+    */
+    set_audiophile: function( audio_manager ) {
+      Strip.prototype.audiophile = audio_manager;
+    },
+
+    /*
+    * Strip.get_audiophile
+    * returns the audio manager for our comic strip.
+    */
+    get_audiophile: function() {
+      return Strip.prototype.audiophile;
     }
 
   };
@@ -883,19 +910,22 @@ Scene.fn = Scene.prototype = {
   * Scene.fn.setup
   */
   setup: function( ctx ) {
+    var scene = this;
     debug( "scene.setup, ctx:"+ctx );
     assert( ctx );
-    this.ctx = ctx;
-    if ( !this.shot ) {
+    scene.ctx = ctx;
+    if ( !scene.shot ) {
       warn( "missing shot" );
     }
-    this.shot && this.shot.draw( ctx ); 
-    if ( this.dialogue ) {
-      this.dialogue.selected_index = 0;
-      this.dialogue.draw( ctx );  
+    scene.shot && scene.shot.draw( ctx ); 
+    if ( scene.dialogue ) {
+      scene.dialogue.selected_index = 0;
+      scene.dialogue.draw( ctx );  
     }
 
-    return this;
+    scene.music && Strip.prototype.audiophile && Strip.prototype.audiophile.play_loop( scene.music );
+
+    return scene;
   },
 
   /* the shot used in this scene. */
@@ -903,10 +933,25 @@ Scene.fn = Scene.prototype = {
   dialogue: null,
   ctx: null,
 
+  /* a music url src. */
+  music:null,
+
   setDialogue: function( dialogue ) {
     this.dialogue = dialogue;
     return this;
-  } 
+  },
+
+  /*
+  * Scene.set_music,
+  * chainable,
+  * set the music source for this scene; 
+  * this music will be played in our comic when our scene gets rendered.
+  */
+  set_music: function( music_src ) {
+    var scene = this;
+    scene.music = music_src;
+    return scene;
+  }
 };
 //---------------------------------------------------------------------------
 Shot.fn = Shot.prototype = { 

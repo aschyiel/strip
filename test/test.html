@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>...</title>
+<script src="../lib/jquery.js"></script>
+<script src="../src/Strip.js"></script>
+<script type="text/javascript"> 
+
+$(document).ready(function(){ doit(); });
+
+var doit = function() { 
+  debug( "..doit.." ); 
+
+  var json_input = generate_json_input(); 
+  debug( "json_input:"+json_input );
+  window.json_input = json_input;
+
+  var strip = new Strip();
+  window.strip = strip;
+  var canvas = $('#stage')[0]; 
+  strip.setCanvas( canvas );
+
+  strip.load_from_json( json_input ).action(); 
+
+} 
+
+var debug = function( msg ) {
+  console.log(msg);
+} 
+
+/*
+* assemble our comic-strip json input configuration.
+* @return strip content as json object.
+*/
+var generate_json_input = function() {
+  debug( "..generate_json_input.." ); 
+
+  return {
+    "title": "walkabout",
+    "scenes":[
+      { 
+        "image": "http://img266.imageshack.us/img266/1894/cowboy.png",
+        "lines": [ 
+          { "text": "Shucks Howdy!" } 
+        ] 
+      }, 
+      { 
+        "image": "http://img338.imageshack.us/img338/8933/saplingshoots.png",
+        "lines": [ 
+          { "text": "Do you know" }, 
+          { "text": "where all the green things" }, 
+          { "text": "in this world originate from?" } 
+          ] 
+      },
+      { 
+        "image": "http://img266.imageshack.us/img266/1894/cowboy.png",
+        "lines": [ 
+          { "text": "They come from" }, 
+          { "text": "our imaginations," }, 
+          { "text": "if you can believe it." } 
+        ] 
+      },
+      { 
+        "image": "http://img832.imageshack.us/img832/1236/treezombie.png",
+        "lines": [ 
+          { "text": "Dream branches," }, 
+          { "text": "artistic inspirational sprouting," }, 
+          { "text": "intestinal roots and all," }, 
+          { "text": "It is really quite a sight..." } 
+        ] 
+      },
+      { 
+        "image": "http://img542.imageshack.us/img542/5568/girlblackandwhite.png",
+        "lines": [ 
+          { "text": "So remember--" }, 
+          { "text": "Tuesday is" },
+          { "text": "Soylent Green day." }
+        ] 
+      },
+      { 
+        "image": "http://img266.imageshack.us/img266/1894/cowboy.png",
+        "lines": [ 
+          { "text": "Eat it up cowboy." } 
+        ] 
+      } 
+    ]
+  
+  };
+} 
+
+</script>
+</head>
+<body>
+  <div style="position: absolute; top: 50px; left:50px">
+    <canvas id="stage" width="600" height="400">html5 canvas isn't!</canvas>
+  </div>
+</body>
+</html>
